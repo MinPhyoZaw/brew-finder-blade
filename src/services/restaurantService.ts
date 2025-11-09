@@ -1,4 +1,4 @@
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { CoffeeShop } from '../types/restaurant';
 
@@ -37,6 +37,62 @@ export class CoffeeShopService {
 
   static getCachedCoffeeShopById(id: string): CoffeeShop | undefined {
     return this.cache?.shops.find((s) => s.id === id);
+  }
+
+  /**
+   * Submit or update a user's rating for a coffee shop.
+   * Stores user rating in coffeeshops/{shopId}/ratings/{userId} and
+   * recomputes the average rating and ratingCount on the parent document.
+   */
+  static async submitRating(coffeeShopId: string, userId: string, rating: number): Promise<void> {
+    try {
+      const shopDocRef = doc(db, this.COLLECTION_NAME, coffeeShopId);
+      const ratingsColRef = collection(shopDocRef, 'ratings');
+      const userRatingDocRef = doc(ratingsColRef, userId);
+
+      await setDoc(userRatingDocRef, { rating, updatedAt: Date.now() }, { merge: true });
+
+      // Recompute aggregate
+      const ratingsSnapshot = await getDocs(ratingsColRef);
+      let sum = 0;
+      let count = 0;
+      ratingsSnapshot.forEach(r => {
+        const data: any = r.data();
+        if (typeof data.rating === 'number') {
+          sum += data.rating;
+          count += 1;
+        }
+      });
+
+      const avg = count > 0 ? Math.round((sum / count) * 10) / 10 : 0;
+
+      await updateDoc(shopDocRef, { rating: avg, ratingCount: count });
+
+      // Update in-memory cache if present
+      if (this.cache) {
+        const idx = this.cache.shops.findIndex(s => s.id === coffeeShopId);
+        if (idx >= 0) {
+          this.cache.shops[idx] = { ...this.cache.shops[idx], rating: avg, ratingCount: count } as CoffeeShop;
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      throw error;
+    }
+  }
+
+  static async getUserRating(coffeeShopId: string, userId: string): Promise<number | null> {
+    try {
+      const shopDocRef = doc(db, this.COLLECTION_NAME, coffeeShopId);
+      const userRatingDocRef = doc(collection(shopDocRef, 'ratings'), userId);
+      const snap = await getDoc(userRatingDocRef);
+      if (!snap.exists()) return null;
+      const data: any = snap.data();
+      return typeof data.rating === 'number' ? data.rating : null;
+    } catch (error) {
+      console.error('Error fetching user rating:', error);
+      return null;
+    }
   }
 
   static calculateDistance(

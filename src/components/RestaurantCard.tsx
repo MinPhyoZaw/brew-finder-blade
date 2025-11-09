@@ -29,6 +29,8 @@ const CoffeeShopCardComponent: React.FC<CoffeeShopCardProps> = ({
               : 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg'
           }
           loading="lazy"
+          width={192}
+          height={192}
           alt={coffeeShop.name}
           className="w-full h-full object-cover rounded-l-xl sm:rounded-t-xl sm:rounded-l-none"
         />
@@ -50,11 +52,7 @@ const CoffeeShopCardComponent: React.FC<CoffeeShopCardProps> = ({
           <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
         </button>
 
-        {coffeeShop.distance !== undefined && (
-          <div className="absolute bottom-2 left-2 bg-coffee-600 text-cream-100 px-2 py-0.5 rounded-full text-xs font-medium">
-            {coffeeShop.distance.toFixed(1)} km
-          </div>
-        )}
+        {/* distance removed per UX request */}
       </div>
 
       {/* Text section */}

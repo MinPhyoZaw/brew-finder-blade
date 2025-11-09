@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Heart, Camera, Coffee, Smile, Search, Filter, X } from 'lucide-react';
+import { Heart, Search, Filter, X } from 'lucide-react';
 const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then(m => ({ default: m.CoffeeShopDetail })));
 import { CoffeeShopService } from '../services/restaurantService';
 import { useFavorites } from '../hooks/useFavorites';
-import type { CoffeeShop, UserLocation } from '../types/restaurant';
+import type { CoffeeShop } from '../types/restaurant';
 import type { User } from '../types/auth';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface CoffeeShopListProps {
-  userLocation: UserLocation | null;
   user: User | null;
-  locationAllowed?: boolean;
-  refetchLocation?: () => void;
 }
 
-export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, user, refetchLocation }) => {
+export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
   const [coffeeShops, setCoffeeShops] = useState<CoffeeShop[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredShops, setFilteredShops] = useState<CoffeeShop[]>([]);
@@ -33,7 +31,9 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
     'Botataung','Dawbon','Thaketa','Seikkan','Dala','Seikkyi Kanaungto',
   ];
 
-  useEffect(() => { fetchCoffeeShops(); }, [userLocation]);
+  useEffect(() => { fetchCoffeeShops(); }, []);
+
+  // location feature removed — no nearest township calculation
 
   const handleOpen = useCallback((shop: CoffeeShop) => {
     setSelectedCoffeeShop(shop);
@@ -48,15 +48,9 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
     try {
       setLoading(true);
       const shops = await CoffeeShopService.getAllCoffeeShops();
-      // If user provided location permission, sort by distance and expose distances
-      if (userLocation) {
-        const sorted = CoffeeShopService.sortCoffeeShopsByDistance(shops, userLocation.latitude, userLocation.longitude);
-        setCoffeeShops(sorted);
-        setFilteredShops(sorted);
-      } else {
-        setCoffeeShops(shops);
-        setFilteredShops(shops);
-      }
+      // Location feature removed: always load shops as-is
+      setCoffeeShops(shops);
+      setFilteredShops(shops);
     } catch (err) {
       console.error(err);
       setError('Failed to load coffee shops.');
@@ -86,10 +80,6 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
     setSelectedProvision(township);
     setShowProvisionDropdown(false);
   };
-
-  const recommendedShops = filteredShops.slice(0, 5);
-  const popularShops = filteredShops.filter(shop => shop.rating >= 4.0);
-  const nearbyShops = userLocation ? filteredShops.slice(0, 5) : [];
 
   // Tag-based categories: show some featured tags and then any other tags present in the data
   const featuredTags: { key: string; label: string }[] = [
@@ -123,6 +113,12 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
     if (shops.length > 0) tagSections.push({ key: tagKey, label: tagKey.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), shops });
   });
 
+  if (loading) return <LoadingSpinner />;
+  if (error) return <div className="p-4 bg-red-100 text-red-700 rounded">{error}</div>;
+
+  const recommendedShops = filteredShops.slice(0, 5);
+  const popularShops = filteredShops.filter(shop => shop.rating >= 4.0);
+
   const renderCategory = (title: string, shops: CoffeeShop[]) => {
     if (shops.length === 0) return null;
     return (
@@ -141,6 +137,8 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
                       ? shop.images[0]
                       : 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg'}
                           loading="lazy"
+                    width={256}
+                    height={224}
                     alt={shop.name}
                     className="w-full h-full object-cover"
                   />
@@ -212,23 +210,9 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ userLocation, us
       </div>
 
       {/* Render Categories */}
-      {/* Show user's location when available */}
-      <div className="mb-4 text-sm text-gray-600 flex items-center justify-between">
-        <div>
-          {userLocation ? (
-            <span>Using your location: {userLocation.latitude.toFixed(6)}, {userLocation.longitude.toFixed(6)} {userLocation.accuracy ? `· ±${Math.round(userLocation.accuracy)}m` : ''}</span>
-          ) : (
-            <span>Showing all coffee shops (location not allowed)</span>
-          )}
-        </div>
-        <div>
-          {refetchLocation && (
-            <button onClick={refetchLocation} className="text-sm text-blue-600 hover:underline">Refresh location</button>
-          )}
-        </div>
+      <div className="mb-4 text-sm text-gray-600">
+        <div>Showing all coffee shops</div>
       </div>
-
-      {userLocation && renderCategory('Nearby', nearbyShops)}
       {renderCategory('Recommended', recommendedShops)}
       {renderCategory('Popular', popularShops)}
 

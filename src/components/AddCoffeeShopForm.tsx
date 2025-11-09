@@ -17,7 +17,7 @@ const PROVISIONS = [
   "Thingangyun", "South Okkalapa", "North Okkalapa", "Hlaingthaya",
   "Shwepyithar", "Dagon Seikkan", "North Dagon", "East Dagon", "South Dagon",
   "Lanmadaw", "Latha", "Pabedan", "Kyauktada", "Botataung", "Dawbon",
-  "Thaketa", "Seikkan", "Dala", "Seikkyi Kanaungto", "Cocokyun"
+  "Thaketa", "Seikkan", "Mingalar Taungnyunt"
 ];
 
 export const AddCoffeeShopForm: React.FC = () => {

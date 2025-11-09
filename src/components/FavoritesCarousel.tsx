@@ -7,7 +7,7 @@ interface FavoritesCarouselProps {
   onRestaurantClick: (coffeeShop: CoffeeShop) => void;
 }
 
-export const FavoritesCarousel: React.FC<FavoritesCarouselProps> = ({ 
+const FavoritesCarouselComponent: React.FC<FavoritesCarouselProps> = ({ 
   favorites, 
   onRestaurantClick 
 }) => {
@@ -116,3 +116,6 @@ export const FavoritesCarousel: React.FC<FavoritesCarouselProps> = ({
     </div>
   );
 };
+
+export const FavoritesCarousel = React.memo(FavoritesCarouselComponent);
+FavoritesCarousel.displayName = 'FavoritesCarousel';

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Home, Coffee, Star, MapPin, Clock, Trash2, Heart } from 'lucide-react';
 import { useFavorites } from '../hooks/useFavorites';
-import { CoffeeShopDetail } from './RestaurantDetail';
+const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then(m => ({ default: m.CoffeeShopDetail })));
 import { LoadingSpinner } from './LoadingSpinner';
 import type { User } from '../types/auth';
 import type { CoffeeShop } from '../types/restaurant';
@@ -93,17 +93,15 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
                 <img
                   src={coffeeShop.images?.[0] || 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg'}
                   alt={coffeeShop.name}
+                  width={192}
+                  height={192}
                   className="w-full h-full object-cover sm:rounded-l-2xl group-hover:scale-110 transition-transform duration-500"
                 />
                 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
                 
-                {coffeeShop.distance !== undefined && (
-                  <div className="absolute bottom-4 right-4 bg-coffee-600/90 backdrop-blur-sm text-cream-100 px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                    {coffeeShop.distance.toFixed(1)} km
-                  </div>
-                )}
+                {/* distance removed per UX request */}
               </div>
 
               {/* Content */}
@@ -168,12 +166,14 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
         ))}
       </div>
 
-      {/* Coffee Shop Detail Modal */}
+      {/* Coffee Shop Detail Modal (lazy) */}
       {selectedCoffeeShop && (
-        <CoffeeShopDetail
-          coffeeShop={selectedCoffeeShop}
-          onClose={() => setSelectedCoffeeShop(null)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center z-50">Loading...</div>}>
+          <CoffeeShopDetail
+            coffeeShop={selectedCoffeeShop}
+            onClose={() => setSelectedCoffeeShop(null)}
+          />
+        </Suspense>
       )}
     </div>
   );

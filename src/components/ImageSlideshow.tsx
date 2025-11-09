@@ -31,6 +31,8 @@ export const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images, restaura
         src={images[currentIndex]}
         alt={`${restaurantName} - Image ${currentIndex + 1}`}
         loading="lazy"
+        width={800}
+        height={384}
         className="w-full h-full object-cover"
       />
       
