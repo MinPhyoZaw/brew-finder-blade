@@ -7,7 +7,7 @@ import { WishlistView } from './components/WishlistView';
 import { LocationStatus } from './components/LocationStatus';
 import { AuthModal } from './components/AuthModal';
 import { SplashScreen } from './components/SplashScreen';
-import { AddCoffeeShopForm } from './components/AddCoffeeShopForm';
+// import { AddCoffeeShopForm } from './components/AddCoffeeShopForm';
 
 function App() {
   const { location, loading, error, refetch } = useGeolocation();

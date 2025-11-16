@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Heart, Search, Filter, X } from 'lucide-react';
+import { Heart, Search, Filter, X, Star, TrendingUp, Camera, Coffee, BookOpen, Users, PartyPopper } from 'lucide-react';
 const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then(m => ({ default: m.CoffeeShopDetail })));
 import { CoffeeShopService } from '../services/restaurantService';
 import { useFavorites } from '../hooks/useFavorites';
@@ -28,7 +28,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
     'Tamwe','Dagon','Hlaing','Ahlone','Yankin','Thingangyun','South Okkalapa',
     'North Okkalapa','Hlaingthaya','Shwepyithar','Dagon Seikkan','North Dagon',
     'East Dagon','South Dagon','Lanmadaw','Latha','Pabedan','Kyauktada',
-    'Botataung','Dawbon','Thaketa','Seikkan','Dala','Seikkyi Kanaungto',
+    'Botataung','Dawbon','Thaketa','Seikkan','Mingalar Taungnyunt'
   ];
 
   useEffect(() => { fetchCoffeeShops(); }, []);
@@ -121,9 +121,32 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
 
   const renderCategory = (title: string, shops: CoffeeShop[]) => {
     if (shops.length === 0) return null;
+    const renderIconForTitle = (t: string) => {
+      const key = t
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+
+      const map: Record<string, any> = {
+        recommended: Star,
+        popular: TrendingUp,
+        first_date: Heart,
+        photograph: Camera,
+        relax_chill: Coffee,
+        study_spot: BookOpen,
+        family: Users,
+        group_hangout: PartyPopper,
+      };
+
+      const Icon = map[key];
+      return Icon ? <Icon className="w-5 h-5 text-gray-600 mr-2" /> : null;
+    };
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">{title}</h2>
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          {renderIconForTitle(title)}
+          <span>{title}</span>
+        </h2>
         <div className="flex overflow-x-auto gap-4 no-scrollbar px-1">
           {shops.map(shop => (
             <div key={shop.id} className="flex-shrink-0 w-64 h-80">
