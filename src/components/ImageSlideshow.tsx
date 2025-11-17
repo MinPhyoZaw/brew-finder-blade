@@ -11,7 +11,7 @@ export const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images, restaura
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+      <div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
         <span className="text-gray-500">No images available</span>
       </div>
     );
@@ -26,13 +26,13 @@ export const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images, restaura
   };
 
   return (
-    <div className="relative w-full h-64 rounded-lg overflow-hidden bg-gray-100">
+    <div className="relative w-full h-full rounded-lg overflow-hidden bg-gray-100">
       <img
         src={images[currentIndex]}
         alt={`${restaurantName} - Image ${currentIndex + 1}`}
         loading="lazy"
-        width={800}
-        height={384}
+        width={1200}
+        height={800}
         className="w-full h-full object-cover"
       />
       

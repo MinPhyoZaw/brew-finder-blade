@@ -285,43 +285,52 @@ export const CoffeeShopDetail: React.FC<CoffeeShopDetailProps> = ({ coffeeShop, 
           )}
 
           {/* Contact Information */}
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
-                <MapPin className="w-4 h-4 text-gray-500 mr-2" />
-                <span className="text-gray-700 text-sm">{coffeeShop.address}</span>
-                {resolveCoordinates(coffeeShop) && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openDirections(coffeeShop); }}
-                    className="ml-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                    aria-label="Get directions"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Directions</span>
-                  </button>
-                )}
-              </div>
+         {/* Contact Information */}
+<div className="space-y-3">
+  <div className="bg-gray-50 p-4 rounded-xl w-full shadow-sm">
 
-              {coffeeShop.phone && (
-                <a
-                  href={`tel:${coffeeShop.phone}`}
-                  className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full text-blue-600 hover:text-blue-700 transition-colors duration-200"
-                >
-                  <Phone className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="text-sm">{coffeeShop.phone}</span>
-                </a>
-              )}
+    {/* Address */}
+    <div className="flex items-start gap-3 mb-3">
+      <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
 
-              {coffeeShop.hours && (
-                <div className="flex items-center bg-gray-100 px-3 py-1.5 rounded-full">
-                  <Clock className="w-4 h-4 text-gray-500 mr-2" />
-                  <span className="text-sm text-gray-700">{coffeeShop.hours}</span>
-                </div>
-              )}
-            </div>
+      <div className="flex flex-col flex-1 min-w-0">
+        <span className="text-gray-800 text-sm leading-relaxed break-words line-clamp-2">
+          {coffeeShop.address}
+        </span>
 
-            {/* distance removed per UX request */}
-          </div>
+        {resolveCoordinates(coffeeShop) && (
+          <button
+            onClick={(e) => { e.stopPropagation(); openDirections(coffeeShop); }}
+            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mt-1"
+          >
+            <Navigation className="w-4 h-4" />
+            <span>Get Directions</span>
+          </button>
+        )}
+      </div>
+    </div>
+
+    {/* Phone */}
+    {coffeeShop.phone && (
+      <a
+        href={`tel:${coffeeShop.phone}`}
+        className="flex items-center gap-3 bg-white p-3 rounded-lg border hover:bg-gray-100 transition"
+      >
+        <Phone className="w-5 h-5 text-gray-500" />
+        <span className="text-gray-700 text-sm">{coffeeShop.phone}</span>
+      </a>
+    )}
+
+    {/* Hours */}
+    {coffeeShop.hours && (
+      <div className="flex items-center gap-3 bg-white p-3 rounded-lg border">
+        <Clock className="w-5 h-5 text-gray-500" />
+        <span className="text-sm text-gray-700">{coffeeShop.hours}</span>
+      </div>
+    )}
+  </div>
+</div>
+
 
             {/* Comments Section (lazy-loaded) */}
             <Suspense fallback={<div className="p-4 text-sm text-gray-600">Loading comments...</div>}>
