@@ -233,9 +233,11 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
       </div>
 
       {/* Render Categories */}
-      <div className="mb-4 text-sm text-gray-600">
-        <div>Showing all coffee shops</div>
-      </div>
+      {filteredShops.length === 0 ? (
+        <div className="mb-4 text-sm text-gray-600">
+          <div>{selectedProvision === 'all' ? 'No coffee shops found.' : `No coffeeshop found in ${selectedProvision}`}</div>
+        </div>
+      ) : null}
       {renderCategory('Recommended', recommendedShops)}
       {renderCategory('Popular', popularShops)}
 

@@ -46,16 +46,8 @@ export const LocationStatus: React.FC<LocationStatusProps> = ({
   }
 
   if (location) {
-    return (
-      <div className="bg-coffee-100 border border-coffee-200 rounded-xl p-4 mb-6">
-        <div className="flex items-center">
-          <CheckCircle className="w-5 h-5 text-coffee-600 mr-3" />
-          <p className="text-coffee-800 font-medium">
-            Location found • Showing coffee shops near you
-          </p>
-        </div>
-      </div>
-    );
+    // Do not show location found text per UX request — keep silently available
+    return null;
   }
 
   return null;
