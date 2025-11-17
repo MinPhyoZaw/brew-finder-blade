@@ -15,47 +15,34 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0ebe3;
-  border-left: 1px solid #d4c4a8;
+  background: #f5f1eb;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #8b7355;
-  border-radius: 0;
-  border: 2px solid #f0ebe3;
+  background: #8b4513;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6d5a45;
+  background: #a0522d;
 }
 
 /* Selection styling */
 ::selection {
-  background: #d4c4a8;
-  color: #2a231c;
+  background: #deb887;
+  color: #5d4037;
 }
 
-/* Vintage theme base styles */
+/* Coffee theme base styles */
 body {
-  font-family: 'Lora', serif;
-  background: #f9f7f4;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      rgba(212, 196, 168, 0.03) 2px,
-      rgba(212, 196, 168, 0.03) 4px
-    );
-  color: #2a231c;
+  font-family: 'Open Sans', sans-serif;
+  background: linear-gradient(135deg, #f5f1eb 0%, #ede0d3 100%);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Playfair Display', serif;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: 'Merriweather', serif;
 }
