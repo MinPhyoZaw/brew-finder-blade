@@ -45,12 +45,6 @@ function App() {
                 width="48"
                 height="48"
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-4 object-cover border-2 border-[#D4A373]"
-                onError={(e) => {
-                  const el = e.currentTarget as HTMLImageElement;
-                  el.onerror = null;
-                  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='120' height='120'><rect x='2' y='6' width='14' height='10' rx='2' fill='%23F6E8D8' stroke='%236F4E37' stroke-width='1.2'/><path d='M6 3v4' stroke='%236F4E37' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/><path d='M19 9a3 3 0 0 0-3-3' stroke='%236F4E37' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/></svg>`;
-                  el.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-                }}
               />
               <div className="min-w-0">
                 <h1 className="text-xl sm:text-2xl font-bold text-[#FAF3E0] logo-font">
@@ -96,7 +90,7 @@ function App() {
                     >
                       <div className="w-8 h-8 bg-[#6F4E37] rounded-full flex items-center justify-center">
                         <span className="text-[#FAF3E0] font-semibold">
-                         {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
+                         {(user?.name).charAt(0).toUpperCase()}
 
                         </span>
                       </div>
@@ -139,10 +133,10 @@ function App() {
             <div className="p-4 border-b border-[#EBD7B3] flex items-start justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-[#6F4E37] rounded-full flex items-center justify-center text-[#FAF3E0] font-semibold text-lg">
-                  {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
+                  {(user?.name).charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#2D2424] truncate">{user.name || user.email}</p>
+                  <p className="text-sm font-medium text-[#2D2424] truncate">{user.name}</p>
                   <p className="text-xs text-[#6F4E37]/80 truncate">{user.email}</p>
                 </div>
               </div>
