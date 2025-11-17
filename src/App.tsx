@@ -32,9 +32,9 @@ function App() {
 
   return (
     
-    <div className="min-h-screen bg-[#FAF3E0] text-[#2D2424]">
+    <div className="min-h-screen bg-vintage-50 text-vintage-950">
       {/* Header */}
-      <header className="bg-[#6F4E37] shadow-md border-b border-[#5C4033]">
+      <header className="bg-vintage-800 shadow-lg border-b-4 border-vintage-700" style={{boxShadow: '0 4px 6px -1px rgba(42, 35, 28, 0.3)'}}>
         <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             {/* Left side: Back (mobile) + Logo and title */}
@@ -43,13 +43,13 @@ function App() {
               <img
                 src="/brew-logo.png"
                 alt="Brew Finder"
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-4 object-cover border-2 border-[#D4A373]"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-sm mr-4 object-cover border-2 border-sepia-400"
               />
               <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#FAF3E0] font-serif">
+                <h1 className="text-xl sm:text-2xl font-bold text-vintage-50 font-serif" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.3)'}}>
                   Brew Finder
                 </h1>
-                <p className="text-[#EEDAC5] text-sm sm:text-base hidden sm:block italic">
+                <p className="text-vintage-200 text-sm sm:text-base hidden sm:block font-serif" style={{fontStyle: 'italic'}}>
                   {user
                     ? `Welcome back, ${user.name}`
                     : 'Find your perfect cup — one café at a time.'}
@@ -64,16 +64,16 @@ function App() {
                   <button
                     onClick={() => setShowWishlist(!showWishlist)}
                     aria-label={showWishlist ? 'Home' : 'Wishlist'}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                    className={`flex items-center space-x-2 px-4 py-2 rounded text-sm font-medium transition-all duration-200 border-2 ${
                       showWishlist
-                        ? 'bg-[#D4A373] text-[#2D2424] shadow-inner'
-                        : 'bg-[#FAF3E0] text-[#6F4E37] hover:bg-[#EBD7B3]'
+                        ? 'bg-sepia-400 text-vintage-950 shadow-inner border-sepia-600'
+                        : 'bg-vintage-100 text-vintage-800 hover:bg-vintage-200 border-vintage-400'
                     }`}
                   >
                     {showWishlist ? (
                       <Home className="w-4 h-4" />
                     ) : (
-                      <Heart className={`w-4 h-4 ${showWishlist ? 'fill-[#6F4E37]' : ''}`} />
+                      <Heart className={`w-4 h-4 ${showWishlist ? 'fill-vintage-800' : ''}`} />
                     )}
                     <span className="hidden sm:inline">
                       {showWishlist ? 'Home' : 'Wishlist'}
@@ -84,30 +84,30 @@ function App() {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 bg-[#D4A373] hover:bg-[#C69C72] px-4 py-2 rounded-full text-[#2D2424] font-medium transition-all duration-200"
+                      className="flex items-center space-x-2 bg-sepia-400 hover:bg-sepia-500 px-4 py-2 rounded text-vintage-950 font-medium transition-all duration-200 border-2 border-sepia-600"
                     >
-                      <div className="w-8 h-8 bg-[#6F4E37] rounded-full flex items-center justify-center">
-                        <span className="text-[#FAF3E0] font-semibold">
+                      <div className="w-8 h-8 bg-vintage-700 rounded-sm flex items-center justify-center border border-vintage-600">
+                        <span className="text-vintage-50 font-semibold">
                          {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
 
                         </span>
                       </div>
-                      <ChevronDown className="w-4 h-4 text-[#2D2424]" />
+                      <ChevronDown className="w-4 h-4 text-vintage-950" />
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-2 w-56 bg-[#FFF8ED] rounded-lg shadow-lg border border-[#E6D1B5] py-2 z-50">
-                        <div className="px-4 py-3 border-b border-[#EBD7B3]">
-                          <p className="text-sm font-medium text-[#2D2424] truncate">
+                      <div className="absolute right-0 mt-2 w-56 bg-vintage-50 rounded shadow-lg border-2 border-vintage-400 py-2 z-50">
+                        <div className="px-4 py-3 border-b-2 border-vintage-300">
+                          <p className="text-sm font-medium text-vintage-950 truncate">
                             {user.name}
                           </p>
-                          <p className="text-xs text-[#6F4E37]/80 truncate">
+                          <p className="text-xs text-vintage-700 truncate">
                             {user.email}
                           </p>
                         </div>
                         <button
                           onClick={handleSignOut}
-                          className="w-full text-left px-4 py-2 text-sm text-[#6F4E37] hover:bg-[#FAE3C6] flex items-center"
+                          className="w-full text-left px-4 py-2 text-sm text-vintage-800 hover:bg-vintage-200 flex items-center"
                         >
                           <LogOut className="w-4 h-4 mr-2" />
                           Sign Out
@@ -119,7 +119,7 @@ function App() {
               ) : (
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="flex items-center space-x-2 bg-[#D4A373] hover:bg-[#C69C72] text-[#2D2424] px-4 py-2 rounded-full font-medium transition-colors duration-200"
+                  className="flex items-center space-x-2 bg-sepia-400 hover:bg-sepia-500 text-vintage-950 px-4 py-2 rounded font-medium transition-colors duration-200 border-2 border-sepia-600"
                 >
                   <User className="w-4 h-4" />
                   <span>Get Started</span>

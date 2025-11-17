@@ -4,10 +4,36 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'serif': ['Merriweather', 'serif'],
-        'sans': ['Open Sans', 'sans-serif'],
+        'serif': ['Playfair Display', 'serif'],
+        'sans': ['Lora', 'serif'],
       },
       colors: {
+        vintage: {
+          50: '#f9f7f4',
+          100: '#f0ebe3',
+          200: '#e4dac7',
+          300: '#d4c4a8',
+          400: '#c0a882',
+          500: '#a88d62',
+          600: '#8b7355',
+          700: '#6d5a45',
+          800: '#584a3a',
+          900: '#483d31',
+          950: '#2a231c',
+        },
+        sepia: {
+          50: '#fdfcfa',
+          100: '#f8f4ed',
+          200: '#f0e8d8',
+          300: '#e4d5ba',
+          400: '#d4bb93',
+          500: '#c19e6f',
+          600: '#a97f54',
+          700: '#8d6746',
+          800: '#74553d',
+          900: '#604735',
+          950: '#35261c',
+        },
         coffee: {
           50: '#faf8f5',
           100: '#f5f1eb',
