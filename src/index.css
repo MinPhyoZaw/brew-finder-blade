@@ -1,8 +1,9 @@
-/* Fonts are preloaded in index.html via <link rel="preload" ...> to reduce render-blocking. */
+@import "./styles/components.css";
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 
 .no-scrollbar::-webkit-scrollbar {

@@ -33,8 +33,7 @@ function App() {
   return (
     
     <div className="min-h-screen bg-[#FAF3E0] text-[#2D2424]">
-      {/* Header */}
-      <header className="bg-[#6F4E37] shadow-md border-b border-[#5C4033]">
+      <header className="bg-[#6F4E37] shadow-md border-b border-[#5C4033]" role="banner">
         <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             {/* Left side: Back (mobile) + Logo and title */}
@@ -42,7 +41,9 @@ function App() {
               {/* Removed back button from wishlist view to simplify mobile workflow */}
               <img
                 src="/brew-logo.png"
-                alt="Brew Finder"
+                alt="Brew Finder logo"
+                width="48"
+                height="48"
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-4 object-cover border-2 border-[#D4A373]"
               />
               <div className="min-w-0">
@@ -63,7 +64,8 @@ function App() {
                 <div className="flex items-center space-x-3 relative">
                   <button
                     onClick={() => setShowWishlist(!showWishlist)}
-                    aria-label={showWishlist ? 'Home' : 'Wishlist'}
+                    aria-label={showWishlist ? 'Go to home' : 'View wishlist'}
+                    aria-pressed={showWishlist}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                       showWishlist
                         ? 'bg-[#D4A373] text-[#2D2424] shadow-inner'
@@ -138,8 +140,7 @@ function App() {
         ></div>
       )}
 
-      {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8" role="main">
         {showWishlist && user ? (
           <WishlistView user={user} />
         ) : (
