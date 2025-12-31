@@ -201,6 +201,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
         <Search className="w-5 h-5 text-gray-600" />
         <input
           type="text"
+          data-testid="coffee-search-input"
           placeholder="Search by name or township..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

@@ -7,7 +7,7 @@ import { WishlistView } from './components/WishlistView';
 import { LocationStatus } from './components/LocationStatus';
 import { AuthModal } from './components/AuthModal';
 import { SplashScreen } from './components/SplashScreen';
-// import { AddCoffeeShopForm } from './components/AddCoffeeShopForm';
+
 
 function App() {
   const { location, loading, error, refetch } = useGeolocation();
@@ -199,8 +199,9 @@ function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
       />
+      
     </div>
-    
+   
   );
 }
 
