@@ -1,257 +1,139 @@
-import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { Heart, Search, Filter, X, Star, TrendingUp, Camera, Coffee, BookOpen, Users, PartyPopper } from 'lucide-react';
-const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then(m => ({ default: m.CoffeeShopDetail })));
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  BookOpen, Camera, ChevronRight, Coffee, Crosshair, Heart, MapPin,
+  PartyPopper, Search, SlidersHorizontal, Sparkles, Star, Sun, Users, Wifi, X,
+} from 'lucide-react';
 import { CoffeeShopService } from '../services/restaurantService';
 import { useFavorites } from '../hooks/useFavorites';
-import type { CoffeeShop } from '../types/restaurant';
+import type { CoffeeShop, UserLocation } from '../types/restaurant';
 import type { User } from '../types/auth';
 import { LoadingSpinner } from './LoadingSpinner';
 
-interface CoffeeShopListProps {
-  user: User | null;
-}
+const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then((m) => ({ default: m.CoffeeShopDetail })));
+const FALLBACK_IMAGE = 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg';
 
-export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user }) => {
-  const [coffeeShops, setCoffeeShops] = useState<CoffeeShop[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredShops, setFilteredShops] = useState<CoffeeShop[]>([]);
-  const [selectedCoffeeShop, setSelectedCoffeeShop] = useState<CoffeeShop | null>(null);
+interface CoffeeShopListProps { user: User | null; location?: UserLocation | null; onRequestLocation?: () => void; }
+
+const normalize = (value = '') => value.toLowerCase().replace(/\s*&\s*/g, '_').replace(/[\s-]+/g, '_');
+const getImage = (shop?: CoffeeShop) => shop?.images?.[0] || FALLBACK_IMAGE;
+
+export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, onRequestLocation }) => {
+  const [shops, setShops] = useState<CoffeeShop[]>([]);
+  const [search, setSearch] = useState('');
+  const [township, setTownship] = useState('all');
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const [selected, setSelected] = useState<CoffeeShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showProvisionDropdown, setShowProvisionDropdown] = useState(false);
-  const [selectedProvision, setSelectedProvision] = useState('all');
-
   const { toggleFavorite, isFavorite } = useFavorites(user);
 
-  const townships = [
-    'Sanchaung','Kamayut','Insein','Kyimyindaing','Mayangone','Mingaladon','Bahan',
-    'Tamwe','Dagon','Hlaing','Ahlone','Yankin','Thingangyun','South Okkalapa',
-    'North Okkalapa','Hlaingthaya','Shwepyithar','Dagon Seikkan','North Dagon',
-    'East Dagon','South Dagon','Lanmadaw','Latha','Pabedan','Kyauktada',
-    'Botataung','Dawbon','Thaketa','Seikkan','Mingalar Taungnyunt'
-  ];
-
-  useEffect(() => { fetchCoffeeShops(); }, []);
-
-  // location feature removed — no nearest township calculation
-
-  const handleOpen = useCallback((shop: CoffeeShop) => {
-    setSelectedCoffeeShop(shop);
+  useEffect(() => {
+    CoffeeShopService.getAllCoffeeShops()
+      .then(setShops)
+      .catch(() => setError('We could not load cafés right now. Please check your connection and try again.'))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleToggleFavorite = useCallback((e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (user) toggleFavorite(id);
-  }, [toggleFavorite, user]);
+  const townships = useMemo(() => Array.from(new Set(shops.map((s) => s.provision).filter(Boolean) as string[])).sort(), [shops]);
+  const filtered = useMemo(() => shops.filter((shop) => {
+    const haystack = [shop.name, shop.provision, shop.address, shop.type, ...(shop.tags || [])].join(' ').toLowerCase();
+    if (search && !haystack.includes(search.toLowerCase())) return false;
+    if (township !== 'all' && normalize(shop.provision) !== normalize(township)) return false;
+    if (!activeFilter) return true;
+    const tags = (shop.tags || []).map(normalize);
+    if (activeFilter === 'open') return Boolean(shop.hours) && !normalize(shop.hours).includes('closed');
+    if (activeFilter === 'specialty') return normalize(shop.type).includes('specialty');
+    if (activeFilter === 'wifi') return tags.some((tag) => tag.includes('wifi') || tag.includes('wi_fi'));
+    if (activeFilter === 'quiet') return tags.some((tag) => tag.includes('quiet') || tag.includes('study'));
+    if (activeFilter === 'outdoor') return tags.some((tag) => tag.includes('outdoor'));
+    return tags.includes(activeFilter);
+  }), [activeFilter, search, shops, township]);
 
-  const fetchCoffeeShops = async () => {
-    try {
-      setLoading(true);
-      const shops = await CoffeeShopService.getAllCoffeeShops();
-      // Location feature removed: always load shops as-is
-      setCoffeeShops(shops);
-      setFilteredShops(shops);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to load coffee shops.');
-    } finally {
-      setLoading(false);
-    }
+  const recommendations = showAll ? filtered : filtered.slice(0, 3);
+  const heroShop = shops.find((shop) => shop.images?.length) || shops[0];
+
+  const openShop = useCallback((shop: CoffeeShop) => setSelected(shop), []);
+  const chooseMood = (key: string) => {
+    setActiveFilter(key);
+    requestAnimationFrame(() => document.getElementById('recommended')?.scrollIntoView({ behavior: 'smooth' }));
   };
 
-  useEffect(() => {
-    let filtered = coffeeShops;
+  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><LoadingSpinner /></div>;
+  if (error) return <div role="alert" className="page-shell py-20"><div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-red-800">{error}</div></div>;
 
-    if (searchTerm) {
-      filtered = filtered.filter(shop =>
-        shop.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        shop.provision?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (selectedProvision !== 'all') {
-      filtered = filtered.filter(shop => shop.provision?.toLowerCase() === selectedProvision.toLowerCase());
-    }
-
-    setFilteredShops(filtered);
-  }, [searchTerm, selectedProvision, coffeeShops]);
-
-  const handleSelectTownship = (township: string) => {
-    setSelectedProvision(township);
-    setShowProvisionDropdown(false);
-  };
-
-  // Tag-based categories: show some featured tags and then any other tags present in the data
-  const featuredTags: { key: string; label: string }[] = [
-    { key: 'first_date', label: 'First Date' },
-    { key: 'photograph', label: 'Photograph' },
-    { key: 'group_hangout', label: 'Group Hangout' },
-    { key: 'family', label: 'Family' },
+  const moods = [
+    { key: 'first_date', label: 'First Date', icon: Heart },
+    { key: 'study_spot', label: 'Study Spot', icon: BookOpen },
+    { key: 'group_hangout', label: 'Group Hangout', icon: PartyPopper },
+    { key: 'photograph', label: 'Photograph', icon: Camera },
+    { key: 'family', label: 'Family', icon: Users },
+    { key: 'relax_chill', label: 'Relax & Chill', icon: Coffee },
   ];
 
-  // Normalize tags from shops (lowercase) and compute other tags not in featured list
-  const allTags = useMemo(() => Array.from(new Set(filteredShops.flatMap((s) => s.tags || []).map((t) => t.toLowerCase()))), [filteredShops]);
-
-  const featuredKeys = featuredTags.map((t) => t.key.toLowerCase());
-  const otherTags = allTags.filter((t) => !featuredKeys.includes(t));
-
-  const tagSections: { key: string; label: string; shops: CoffeeShop[] }[] = [];
-
-  // Add featured tags in order if they have shops
-  featuredTags.forEach((ft) => {
-    const shops = filteredShops.filter((shop) =>
-      (shop.tags || []).map((t) => t.toLowerCase()).includes(ft.key.toLowerCase())
-    );
-    if (shops.length > 0) tagSections.push({ key: ft.key, label: ft.label, shops });
-  });
-
-  // Add up to 5 other dynamic tags
-  otherTags.slice(0, 5).forEach((tagKey) => {
-    const shops = filteredShops.filter((shop) =>
-      (shop.tags || []).map((t) => t.toLowerCase()).includes(tagKey)
-    );
-    if (shops.length > 0) tagSections.push({ key: tagKey, label: tagKey.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), shops });
-  });
-
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="p-4 bg-red-100 text-red-700 rounded">{error}</div>;
-
-  const recommendedShops = filteredShops.slice(0, 5);
-  const popularShops = filteredShops.filter(shop => shop.rating >= 4.0);
-
-  const renderCategory = (title: string, shops: CoffeeShop[]) => {
-    if (shops.length === 0) return null;
-    const renderIconForTitle = (t: string) => {
-      const key = t
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_|_$/g, '');
-
-      const map: Record<string, any> = {
-        recommended: Star,
-        popular: TrendingUp,
-        first_date: Heart,
-        photograph: Camera,
-        relax_chill: Coffee,
-        study_spot: BookOpen,
-        family: Users,
-        group_hangout: PartyPopper,
-      };
-
-      const Icon = map[key];
-      return Icon ? <Icon className="w-5 h-5 text-gray-600 mr-2" /> : null;
-    };
-    return (
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 flex items-center">
-          {renderIconForTitle(title)}
-          <span>{title}</span>
-        </h2>
-        <div className="flex overflow-x-auto gap-4 no-scrollbar px-1">
-          {shops.map(shop => (
-            <div key={shop.id} className="flex-shrink-0 w-64 h-80">
-              <div
-                className="bg-white rounded-xl shadow-lg flex flex-col overflow-hidden h-full cursor-pointer hover:shadow-xl transition-shadow"
-                      onClick={() => handleOpen(shop)}
-              >
-                <div className="h-[70%] w-full relative">
-                  <img
-                    src={shop.images && shop.images.length > 0
-                      ? shop.images[0]
-                      : 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg'}
-                          loading="lazy"
-                    width={256}
-                    height={224}
-                    alt={shop.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                          onClick={(e) => handleToggleFavorite(e, shop.id)}
-                    className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-200 ${
-                      !user
-                        ? 'bg-coffee-200 text-coffee-400 cursor-not-allowed'
-                        : isFavorite(shop.id)
-                        ? 'bg-coffee-600 text-cream-100 hover:bg-coffee-700'
-                        : 'bg-cream-100/80 text-coffee-600 hover:bg-cream-100 hover:text-coffee-700'
-                    }`}
-                    disabled={!user}
-                  >
-                    <Heart size={16} className={isFavorite(shop.id) ? 'fill-current' : ''} />
-                  </button>
-                </div>
-                <div className="h-[30%] p-3 flex flex-col justify-between">
-                  <h3 className="text-base font-semibold line-clamp-1">{shop.name}</h3>
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>⭐ {shop.rating}</span>
-                    <span className="line-clamp-1">{shop.address}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+  return <>
+    <section id="discover" className="page-shell hero-grid pt-10 sm:pt-14 lg:pt-20">
+      <div className="flex flex-col justify-center">
+        <p className="mb-4 text-xs font-bold tracking-[.2em] text-[#B5663D]">GOOD COFFEE. A BRIGHTER YANGON.</p>
+        <h1 className="max-w-2xl text-4xl font-bold leading-[1.06] tracking-[-.035em] text-[#241711] sm:text-5xl lg:text-6xl">Find your perfect coffee spot</h1>
+        <p className="mt-5 max-w-xl text-base leading-7 text-[#6F675F] sm:text-lg">Discover the best cafés in Yangon — from cozy hideaways to vibrant community spaces.</p>
+        <div className="mt-8 rounded-2xl border border-[#EAE3D8] bg-white p-2 shadow-soft sm:flex">
+          <label className="flex min-h-12 flex-1 items-center gap-3 px-3">
+            <Search className="h-5 w-5 text-[#6F675F]" aria-hidden="true" />
+            <span className="sr-only">Search cafés</span>
+            <input data-testid="coffee-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cafés, neighborhoods or vibes" className="w-full bg-transparent text-sm outline-none placeholder:text-[#8C847C]" />
+            {search && <button aria-label="Clear search" onClick={() => setSearch('')} className="icon-button"><X className="h-4 w-4" /></button>}
+          </label>
+          <div className="my-1 hidden w-px bg-[#EAE3D8] sm:block" />
+          <select aria-label="Select township" value={township} onChange={(e) => setTownship(e.target.value)} className="min-h-12 w-full rounded-xl bg-transparent px-3 text-sm font-semibold outline-none sm:w-44">
+            <option value="all">All townships</option>{townships.map((item) => <option key={item}>{item}</option>)}
+          </select>
+          <button onClick={onRequestLocation} className="button-primary w-full sm:w-auto"><Crosshair className="h-4 w-4" /> Near me</button>
         </div>
+        <FilterChips active={activeFilter} onChange={setActiveFilter} />
       </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen py-6 px-4">
-      {/* Search Bar */}
-      <div className="p-3 rounded-xl mb-6 flex items-center gap-3 border border-gray-300">
-        <Search className="w-5 h-5 text-gray-600" />
-        <input
-          type="text"
-          data-testid="coffee-search-input"
-          placeholder="Search by name or township..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 bg-transparent focus:outline-none text-gray-800"
-        />
-        <button onClick={() => setSearchTerm('')}><X className="w-5 h-5 text-gray-600" /></button>
+      <div className="relative mt-9 min-h-[320px] overflow-hidden rounded-[28px] lg:mt-0 lg:min-h-[520px]">
+        <img src={getImage(heroShop)} alt={heroShop ? `Coffee and interior at ${heroShop.name}` : 'A welcoming Yangon café'} width="720" height="620" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-[#241711]/90 p-4 text-white sm:inset-x-auto sm:left-5 sm:max-w-xs"><div className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#E6A67E]" /><p className="text-sm font-semibold leading-5">Yangon’s café culture is waiting for you</p></div></div>
       </div>
+    </section>
 
-      {/* Township Dropdown */}
-      <div className="relative mb-6">
-        <button
-          onClick={() => setShowProvisionDropdown(!showProvisionDropdown)}
-          className="w-full p-3 rounded-xl flex justify-between items-center border border-gray-300 bg-transparent"
-        >
-          {selectedProvision === 'all' ? 'Select Township' : selectedProvision}
-          <Filter className="w-5 h-5 text-gray-600" />
-        </button>
-        {showProvisionDropdown && (
-          <div className="absolute top-full left-0 w-full shadow-lg rounded-xl mt-2 max-h-64 overflow-y-auto z-50 bg-white">
-            <ul>
-              <li className="p-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectTownship('all')}>All Townships</li>
-              {townships.map(t => (
-                <li key={t} className="p-3 cursor-pointer hover:bg-gray-100" onClick={() => handleSelectTownship(t)}>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+    <section id="recommended" className="page-shell section-space">
+      <SectionHeader title="Recommended for you" text="Handpicked cafés based on what you might love." action={filtered.length > 3 ? (showAll ? 'Show less' : 'See all') : undefined} onAction={() => setShowAll(!showAll)} />
+      {recommendations.length ? <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {recommendations.map((shop) => <CafeCard key={shop.id} shop={shop} favorite={isFavorite(shop.id)} canFavorite={!!user} onFavorite={() => toggleFavorite(shop.id)} onOpen={() => openShop(shop)} location={location} />)}
+      </div> : <div className="mt-8 rounded-3xl border border-dashed border-[#D8CEC0] p-12 text-center"><Coffee className="mx-auto mb-3 h-8 w-8 text-[#B5663D]" /><h3 className="font-bold">No cafés match those filters</h3><p className="mt-2 text-sm text-[#6F675F]">Try another township, mood, or search term.</p><button className="mt-5 text-sm font-bold text-[#28613E]" onClick={() => { setSearch(''); setTownship('all'); setActiveFilter(null); }}>Clear all filters</button></div>}
+    </section>
 
-      {/* Render Categories */}
-      {filteredShops.length === 0 ? (
-        <div className="mb-4 text-sm text-gray-600">
-          <div>{selectedProvision === 'all' ? 'No coffee shops found.' : `No coffeeshop found in ${selectedProvision}`}</div>
-        </div>
-      ) : null}
-      {renderCategory('Recommended', recommendedShops)}
-      {renderCategory('Popular', popularShops)}
+    <section id="collections" className="bg-[#F2ECE2]"><div className="page-shell section-space">
+      <SectionHeader title="Browse by mood" text="Find the right café for your moment." />
+      <div className="mood-grid mt-8">{moods.map(({ key, label, icon: Icon }, index) => {
+        const match = shops.find((shop) => (shop.tags || []).map(normalize).includes(key)) || shops[index % Math.max(shops.length, 1)];
+        return <button key={key} onClick={() => chooseMood(key)} className="mood-card group" aria-label={`Browse cafés for ${label}`}><img src={getImage(match)} alt="" loading="lazy" width="280" height="360" /><span className="mood-overlay" /><span className="relative z-10 flex h-full flex-col items-start justify-end p-5 text-white"><Icon className="mb-3 h-6 w-6" /><strong>{label}</strong></span></button>;
+      })}</div>
+    </div></section>
 
-      {/* Tag sections (featured + dynamic) */}
-      {tagSections.map((section) => (
-        <div key={section.key}>{renderCategory(section.label, section.shops)}</div>
-      ))}
-
-      {selectedCoffeeShop && (
-        <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center z-50">Loading...</div>}>
-          <CoffeeShopDetail coffeeShop={selectedCoffeeShop} onClose={() => setSelectedCoffeeShop(null)} />
-        </Suspense>
-      )}
-    </div>
-  );
+    <ExploreNearby location={location} onRequestLocation={onRequestLocation} />
+    {selected && <Suspense fallback={<div className="fixed inset-0 z-50 grid place-items-center bg-white/80"><LoadingSpinner /></div>}><CoffeeShopDetail coffeeShop={selected} onClose={() => setSelected(null)} /></Suspense>}
+  </>;
 };
+
+const FilterChips = ({ active, onChange }: { active: string | null; onChange: (value: string | null) => void }) => {
+  const filters = [
+    { key: 'open', label: 'Open now', icon: Coffee }, { key: 'quiet', label: 'Quiet', icon: BookOpen }, { key: 'outdoor', label: 'Outdoor', icon: Sun },
+    { key: 'wifi', label: 'Wi-Fi', icon: Wifi }, { key: 'specialty', label: 'Specialty coffee', icon: Sparkles },
+  ];
+  return <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Quick filters">{filters.map(({ key, label, icon: Icon }) => <button key={key} aria-pressed={active === key} onClick={() => onChange(active === key ? null : key)} className={`filter-chip ${active === key ? 'filter-chip-active' : ''}`}><Icon className="h-4 w-4" />{label}</button>)}<button className="filter-chip" onClick={() => document.querySelector<HTMLSelectElement>('select[aria-label="Select township"]')?.focus()}><SlidersHorizontal className="h-4 w-4" />More filters</button></div>;
+};
+
+const SectionHeader = ({ title, text, action, onAction }: { title: string; text: string; action?: string; onAction?: () => void }) => <div className="flex items-end justify-between gap-5"><div><h2 className="text-3xl font-bold tracking-tight text-[#241711] sm:text-4xl">{title}</h2><p className="mt-2 text-[#6F675F]">{text}</p></div>{action && <button onClick={onAction} className="hidden items-center gap-1 text-sm font-bold text-[#28613E] sm:flex">{action}<ChevronRight className="h-4 w-4" /></button>}</div>;
+
+const CafeCard = ({ shop, favorite, canFavorite, onFavorite, onOpen, location }: { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void; location?: UserLocation | null }) => {
+  const distance = location ? CoffeeShopService.calculateDistance(location.latitude, location.longitude, shop.latitude, shop.longitude) : shop.distance;
+  return <article className="cafe-card" onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }} tabIndex={0} role="button">
+    <div className="relative aspect-[4/3] overflow-hidden"><img src={getImage(shop)} alt={`${shop.name} café`} loading="lazy" width="520" height="390" className="h-full w-full object-cover" /><span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#28613E]">{shop.hours ? 'Hours available' : 'Hours unavailable'}</span><button disabled={!canFavorite} onClick={(e) => { e.stopPropagation(); onFavorite(); }} aria-label={favorite ? `Remove ${shop.name} from wishlist` : `Add ${shop.name} to wishlist`} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#4A2D1F] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"><Heart className={`h-5 w-5 ${favorite ? 'fill-[#B5663D] text-[#B5663D]' : ''}`} /></button></div>
+    <div className="p-5"><div className="flex items-start justify-between gap-3"><h3 className="line-clamp-1 text-xl font-bold">{shop.name}</h3><span className="flex items-center gap-1 text-sm font-bold"><Star className="h-4 w-4 fill-[#F5A623] text-[#F5A623]" />{shop.rating || 'New'}</span></div><div className="mt-2 flex items-center gap-2 text-sm text-[#6F675F]"><MapPin className="h-4 w-4 shrink-0" /><span className="line-clamp-1">{shop.provision || shop.address}</span>{distance != null && <><span>·</span><span>{distance.toFixed(1)} km</span></>}</div><div className="mt-4 flex flex-wrap gap-2">{[shop.type, ...(shop.tags || [])].filter(Boolean).slice(0, 3).map((tag) => <span key={tag} className="rounded-full bg-[#F2ECE2] px-3 py-1 text-xs font-semibold text-[#4A2D1F]">{String(tag).replace(/_/g, ' ')}</span>)}</div></div>
+  </article>;
+};
+
+const ExploreNearby = ({ location, onRequestLocation }: { location?: UserLocation | null; onRequestLocation?: () => void }) => <section id="map" className="page-shell section-space"><div className="overflow-hidden rounded-[28px] bg-[#28613E] text-white lg:grid lg:grid-cols-2"><div className="p-8 sm:p-12 lg:p-16"><p className="text-xs font-bold tracking-[.18em] text-[#C9DFC8]">YOUR NEXT CUP, CLOSER</p><h2 className="mt-4 text-3xl font-bold sm:text-4xl">Explore nearby</h2><p className="mt-4 max-w-md text-[#E1EBE1]">See great cafés around you on the map.</p><ul className="mt-7 space-y-3 text-sm text-[#F7FBF7]"><li>✓ Real-time locations</li><li>✓ Opening hours</li><li>✓ Photos and reviews</li></ul><button onClick={onRequestLocation} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 font-bold text-[#28613E]"><MapPin className="h-4 w-4" />{location ? 'Refresh location' : 'Open Map'}</button></div><div className="map-preview" aria-label="Stylized map preview of Yangon"><div className="map-road road-one"/><div className="map-road road-two"/><MapPin className="map-pin left-[28%] top-[36%]"/><MapPin className="map-pin left-[64%] top-[58%]"/><div className="absolute bottom-6 left-6 rounded-xl bg-white p-3 text-sm font-bold text-[#241711] shadow-lg">Yangon cafés near you</div></div></div></section>;
