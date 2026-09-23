@@ -1,14 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, ChevronDown, Coffee, Download, Heart, LogOut, Menu, Search, User as UserIcon, X } from 'lucide-react';
+import { Bell, ChevronDown, Coffee, Download, Heart, LogOut, User as UserIcon } from 'lucide-react';
 import type { User } from '../types/auth';
 
 interface BeforeInstallPromptEvent extends Event { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>; }
 
 export const SiteNavbar = ({ user, onSignIn, onSignOut, onHome, onWishlist }: { user: User | null; onSignIn: () => void; onSignOut: () => void; onHome: () => void; onWishlist: () => void }) => {
-  const [menu, setMenu] = useState(false);
   const [profile, setProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
-  const go = (id: string) => { onHome(); setMenu(false); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }), 20); };
   useEffect(() => {
     const close = (event: MouseEvent) => { if (!profileRef.current?.contains(event.target as Node)) setProfile(false); };
     document.addEventListener('mousedown', close); return () => document.removeEventListener('mousedown', close);
@@ -16,16 +14,12 @@ export const SiteNavbar = ({ user, onSignIn, onSignOut, onHome, onWishlist }: { 
   return <header className="sticky top-0 z-40 border-b border-white/10 bg-[#4A2D1F] text-white shadow-sm">
     <nav className="page-shell flex h-18 items-center justify-between" aria-label="Main navigation">
       <button onClick={onHome} className="flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4"><img src="/brew-logo.png" alt="" width="40" height="40" className="h-10 w-10 rounded-full object-cover ring-1 ring-white/25" /><span className="text-lg font-bold tracking-tight">Brew Finder</span></button>
-      <div className="hidden items-center gap-8 text-sm font-semibold text-[#F4ECE6] lg:flex"><button onClick={() => go('discover')}>Discover</button><button onClick={() => go('map')}>Map</button><button onClick={() => go('collections')}>Collections</button></div>
       <div className="flex items-center gap-1 sm:gap-2">
-        <button onClick={() => go('discover')} aria-label="Search" className="nav-icon"><Search /></button>
         <button onClick={onWishlist} aria-label="Open wishlist" className="nav-icon sm:w-auto sm:gap-2 sm:px-3"><Heart /><span className="hidden sm:inline">Wishlist</span></button>
         <button aria-label="Notifications" className="nav-icon hidden sm:grid"><Bell /></button>
         {user ? <div className="relative" ref={profileRef}><button onClick={() => setProfile(!profile)} aria-expanded={profile} className="flex min-h-11 items-center gap-2 rounded-full px-1.5 hover:bg-white/10"><span className="grid h-8 w-8 place-items-center rounded-full bg-[#B5663D] text-sm font-bold">{user.name?.charAt(0).toUpperCase() || 'U'}</span><ChevronDown className="hidden h-4 w-4 sm:block" /></button>{profile && <div className="absolute right-0 top-14 w-64 rounded-2xl border border-[#EAE3D8] bg-white p-2 text-[#241711] shadow-xl"><div className="border-b border-[#EAE3D8] px-3 py-3"><p className="truncate font-bold">{user.name}</p><p className="truncate text-xs text-[#6F675F]">{user.email}</p></div><button onClick={onWishlist} className="menu-item"><Heart />My wishlist</button><button onClick={onSignOut} className="menu-item text-red-700"><LogOut />Log out</button></div>}</div> : <button onClick={onSignIn} className="ml-1 min-h-11 rounded-full bg-[#FAF7F0] px-4 text-sm font-bold text-[#4A2D1F]"><span className="hidden sm:inline">Sign in</span><UserIcon className="h-5 w-5 sm:hidden" /></button>}
-        <button onClick={() => setMenu(!menu)} aria-label="Toggle menu" aria-expanded={menu} className="nav-icon lg:hidden">{menu ? <X /> : <Menu />}</button>
       </div>
     </nav>
-    {menu && <div className="border-t border-white/10 px-5 py-3 lg:hidden"><div className="page-shell flex flex-col text-left text-sm font-semibold"><button onClick={() => go('discover')} className="mobile-nav-link">Discover</button><button onClick={() => go('map')} className="mobile-nav-link">Map</button><button onClick={() => go('collections')} className="mobile-nav-link">Collections</button></div></div>}
   </header>;
 };
 
