@@ -83,7 +83,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .map-pin { position: absolute; z-index: 2; width: 2.4rem; height: 2.4rem; padding: .55rem; border-radius: 999px; background: #B5663D; color: white; filter: drop-shadow(0 5px 6px rgba(0,0,0,.18)); }
 
 @media (min-width: 640px) { .page-shell { width: min(100% - 3rem, 1240px); } .mood-grid { grid-auto-flow: initial; grid-template-columns: repeat(3, 1fr); overflow: visible; } }
-@media (min-width: 1024px) { .hero-grid { grid-template-columns: 1.05fr .95fr; } .mood-grid { grid-template-columns: repeat(6, 1fr); } .mood-card { height: 290px; } }
+@media (min-width: 1024px) { .hero-grid { grid-template-columns: 1fr 1.05fr; align-items: center; } .mood-grid { grid-template-columns: repeat(6, 1fr); } .mood-card { height: 290px; } }
 @media (max-width: 639px) { .section-space { padding-block: 3.75rem; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 

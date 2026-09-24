@@ -8,6 +8,7 @@ import { useFavorites } from '../hooks/useFavorites';
 import type { CoffeeShop, UserLocation } from '../types/restaurant';
 import type { User } from '../types/auth';
 import { LoadingSpinner } from './LoadingSpinner';
+import { HeroCafeCollage } from './HeroCafeCollage';
 
 const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then((m) => ({ default: m.CoffeeShopDetail })));
 const FALLBACK_IMAGE = 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg';
@@ -51,7 +52,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
   }), [activeFilter, search, shops, township]);
 
   const recommendations = showAll ? filtered : filtered.slice(0, 3);
-  const heroShop = shops.find((shop) => shop.images?.length) || shops[0];
+  const heroImages = useMemo(() => shops.flatMap((shop) => shop.images || []), [shops]);
 
   const openShop = useCallback((shop: CoffeeShop) => setSelected(shop), []);
   const chooseMood = (key: string) => {
@@ -92,9 +93,8 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
         </div>
         <FilterChips active={activeFilter} onChange={setActiveFilter} />
       </div>
-      <div className="relative mt-9 min-h-[320px] overflow-hidden rounded-[28px] lg:mt-0 lg:min-h-[520px]">
-        <img src={getImage(heroShop)} alt={heroShop ? `Coffee and interior at ${heroShop.name}` : 'A welcoming Yangon café'} width="720" height="620" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-x-5 bottom-5 rounded-2xl bg-[#241711]/90 p-4 text-white sm:inset-x-auto sm:left-5 sm:max-w-xs"><div className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#E6A67E]" /><p className="text-sm font-semibold leading-5">Yangon’s café culture is waiting for you</p></div></div>
+      <div className="mt-9 min-w-0 lg:mt-0">
+        <HeroCafeCollage images={heroImages} />
       </div>
     </section>
 
