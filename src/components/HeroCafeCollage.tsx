@@ -33,10 +33,10 @@ const prepareHeroImages = (images: unknown[]): string[] => {
 export function HeroCafeCollage({ images }: { images: unknown[] }) {
   const sources = useMemo(() => prepareHeroImages(images), [images]);
   const panels = [
-    'left-0 top-0 h-[61%] w-[58%] rounded-[44px_24px_68px_24px]',
-    'right-0 top-0 h-[41%] w-[39%] rounded-[28px_48px_28px_64px]',
-    'bottom-0 left-0 h-[35%] w-[66%] rounded-[24px_60px_28px_48px]',
-    'bottom-0 right-0 h-[56%] w-[31%] rounded-[64px_24px_48px_28px]',
+    'left-0 top-0 h-[61%] w-[58%] rounded-[28px_18px_44px_18px] sm:rounded-[44px_24px_68px_24px]',
+    'right-0 top-0 h-[41%] w-[39%] rounded-[18px_30px_18px_40px] sm:rounded-[28px_48px_28px_64px]',
+    'bottom-0 left-0 h-[35%] w-[66%] rounded-[18px_40px_20px_30px] sm:rounded-[24px_60px_28px_48px]',
+    'bottom-0 right-0 h-[56%] w-[31%] rounded-[40px_18px_30px_20px] sm:rounded-[64px_24px_48px_28px]',
   ];
 
   return (

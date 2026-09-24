@@ -43,7 +43,6 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   min-width: 320px;
-  overflow-x: hidden;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #FAF7F0;
   color: #241711;
@@ -53,7 +52,7 @@ button, a, input, select { -webkit-tap-highlight-color: transparent; }
 button, a { transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #E7A77F; outline-offset: 3px; }
 
-.page-shell { width: min(100% - 2rem, 1240px); margin-inline: auto; }
+.page-shell { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 1rem; }
 .h-18 { height: 4.5rem; }
 .section-space { padding-block: 5rem; }
 .hero-grid { display: grid; gap: 3rem; }
@@ -70,20 +69,22 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .menu-item svg { width: 1rem; height: 1rem; }
 .filter-chip { min-height: 2.75rem; flex: none; display: inline-flex; align-items: center; gap: .45rem; border: 1px solid #E1D8CC; border-radius: 999px; background: #FFFEFB; padding: .6rem .9rem; color: #514941; font-size: .8rem; font-weight: 700; }
 .filter-chip:hover, .filter-chip-active { border-color: #28613E; background: #E7F0E8; color: #28613E; }
-.cafe-card { overflow: hidden; border: 1px solid #EAE3D8; border-radius: 22px; background: #FFFEFB; cursor: pointer; box-shadow: 0 8px 24px rgba(74,45,31,.055); }
+.cafe-card { min-width: 0; width: 100%; overflow: hidden; border: 1px solid #EAE3D8; border-radius: 22px; background: #FFFEFB; cursor: pointer; box-shadow: 0 8px 24px rgba(74,45,31,.055); }
 .cafe-card:hover { transform: translateY(-3px); box-shadow: 0 16px 32px rgba(74,45,31,.1); }
-.mood-grid { display: grid; grid-auto-flow: column; grid-auto-columns: 72%; gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .75rem; }
-.mood-card { position: relative; height: 260px; overflow: hidden; border-radius: 20px; text-align: left; scroll-snap-align: start; }
+.mood-grid { display: grid; width: 100%; min-width: 0; grid-auto-flow: column; grid-auto-columns: 168px; gap: .9rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 1px; padding-bottom: .75rem; overscroll-behavior-inline: contain; scrollbar-width: none; }
+.mood-grid::-webkit-scrollbar { display: none; }
+.mood-card { position: relative; width: 100%; min-width: 0; height: 260px; flex-shrink: 0; overflow: hidden; border-radius: 20px; text-align: left; scroll-snap-align: start; }
 .mood-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 300ms ease; }
 .mood-card:hover img { transform: scale(1.04); }
 .mood-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(24,14,10,.88)); }
-.map-preview { position: relative; min-height: 340px; overflow: hidden; background-color: #E6E0D2; background-image: linear-gradient(35deg, transparent 45%, #d4cbbb 46%, #d4cbbb 49%, transparent 50%), linear-gradient(120deg, transparent 44%, #d4cbbb 45%, #d4cbbb 49%, transparent 50%); background-size: 150px 120px, 190px 160px; }
+.map-preview { position: relative; width: 100%; min-width: 0; min-height: 280px; overflow: hidden; background-color: #E6E0D2; background-image: linear-gradient(35deg, transparent 45%, #d4cbbb 46%, #d4cbbb 49%, transparent 50%), linear-gradient(120deg, transparent 44%, #d4cbbb 45%, #d4cbbb 49%, transparent 50%); background-size: 150px 120px, 190px 160px; }
 .map-road { position: absolute; height: 16px; width: 130%; background: white; border: 1px solid #D6CEBF; transform-origin: center; }
 .road-one { left: -10%; top: 42%; transform: rotate(13deg); }.road-two { left: -18%; top: 57%; transform: rotate(-28deg); }
 .map-pin { position: absolute; z-index: 2; width: 2.4rem; height: 2.4rem; padding: .55rem; border-radius: 999px; background: #B5663D; color: white; filter: drop-shadow(0 5px 6px rgba(0,0,0,.18)); }
 
-@media (min-width: 640px) { .page-shell { width: min(100% - 3rem, 1240px); } .mood-grid { grid-auto-flow: initial; grid-template-columns: repeat(3, 1fr); overflow: visible; } }
+@media (min-width: 640px) { .page-shell { padding-inline: 1.5rem; } .mood-grid { grid-auto-flow: initial; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; } }
 @media (min-width: 1024px) { .hero-grid { grid-template-columns: 1fr 1.05fr; align-items: center; } .mood-grid { grid-template-columns: repeat(6, 1fr); } .mood-card { height: 290px; } }
+@media (min-width: 1024px) { .page-shell { padding-inline: 2rem; } }
 @media (max-width: 639px) { .section-space { padding-block: 3.75rem; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 
