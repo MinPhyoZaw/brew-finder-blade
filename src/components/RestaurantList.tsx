@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { CoffeeShopService } from '../services/restaurantService';
 import { useFavorites } from '../hooks/useFavorites';
-import type { CoffeeShop, UserLocation } from '../types/restaurant';
+import type { CoffeeShop, LocationError, UserLocation } from '../types/restaurant';
 import type { User } from '../types/auth';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -75,12 +75,24 @@ function HeroCafeCollage({ images }: { images: unknown[] }) {
   </div>;
 }
 
-interface CoffeeShopListProps { user: User | null; location?: UserLocation | null; onRequestLocation?: () => void; }
+interface CoffeeShopListProps {
+  user: User | null;
+  location?: UserLocation | null;
+  locationLoading?: boolean;
+  locationError?: LocationError | null;
+  onRequestLocation?: () => void;
+}
 
 const normalize = (value = '') => value.toLowerCase().replace(/\s*&\s*/g, '_').replace(/[\s-]+/g, '_');
 const getImage = (shop?: CoffeeShop) => shop?.images?.[0] || FALLBACK_IMAGE;
+const hasValidCoordinates = (shop: CoffeeShop) => Number.isFinite(shop.latitude)
+  && Number.isFinite(shop.longitude)
+  && shop.latitude >= -90
+  && shop.latitude <= 90
+  && shop.longitude >= -180
+  && shop.longitude <= 180;
 
-export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, onRequestLocation }) => {
+export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, locationLoading = false, locationError, onRequestLocation }) => {
   const [shops, setShops] = useState<CoffeeShop[]>([]);
   const [search, setSearch] = useState('');
   const [township, setTownship] = useState('all');
@@ -89,6 +101,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
   const [selected, setSelected] = useState<CoffeeShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nearMeActive, setNearMeActive] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites(user);
 
   useEffect(() => {
@@ -113,13 +126,33 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
     return tags.includes(activeFilter);
   }), [activeFilter, search, shops, township]);
 
-  const recommendations = showAll ? filtered : filtered.slice(0, 3);
+  const nearbyResults = useMemo(() => {
+    const withDistances = filtered.map((shop) => ({
+      ...shop,
+      distance: location && hasValidCoordinates(shop)
+        ? CoffeeShopService.calculateDistance(location.latitude, location.longitude, shop.latitude, shop.longitude)
+        : undefined,
+    }));
+
+    if (!nearMeActive || !location) return withDistances;
+
+    return withDistances.sort((a, b) => {
+      if (a.distance == null) return b.distance == null ? 0 : 1;
+      if (b.distance == null) return -1;
+      return a.distance - b.distance;
+    });
+  }, [filtered, location, nearMeActive]);
+  const recommendations = showAll ? nearbyResults : nearbyResults.slice(0, 3);
   const heroImages = useMemo(() => shops.flatMap((shop) => shop.images || []), [shops]);
 
   const openShop = useCallback((shop: CoffeeShop) => setSelected(shop), []);
   const chooseMood = (key: string) => {
     setActiveFilter(key);
     requestAnimationFrame(() => document.getElementById('recommended')?.scrollIntoView({ behavior: 'smooth' }));
+  };
+  const requestNearby = () => {
+    setNearMeActive(true);
+    onRequestLocation?.();
   };
 
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><LoadingSpinner /></div>;
@@ -136,23 +169,32 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
 
   return <>
     <section id="discover" className="page-shell hero-grid pt-10 sm:pt-14 lg:pt-20">
-      <div className="flex flex-col justify-center">
+      <div className="flex min-w-0 flex-col justify-center">
         <p className="mb-4 text-xs font-bold tracking-[.2em] text-[#B5663D]">GOOD COFFEE. A BRIGHTER YANGON.</p>
         <h1 className="max-w-2xl text-4xl font-bold leading-[1.06] tracking-[-.035em] text-[#241711] sm:text-5xl lg:text-6xl">Find your perfect coffee spot</h1>
         <p className="mt-5 max-w-xl text-base leading-7 text-[#6F675F] sm:text-lg">Discover the best cafés in Yangon — from cozy hideaways to vibrant community spaces.</p>
-        <div className="mt-8 rounded-2xl border border-[#EAE3D8] bg-white p-2 shadow-soft sm:flex">
-          <label className="flex min-h-12 flex-1 items-center gap-3 px-3">
-            <Search className="h-5 w-5 text-[#6F675F]" aria-hidden="true" />
+        <div className="mt-8 grid min-w-0 gap-2 rounded-2xl border border-[#EAE3D8] bg-white p-2 shadow-soft sm:grid-cols-[minmax(0,1fr)_180px_auto] sm:gap-0">
+          <label className="flex min-h-12 min-w-0 items-center gap-3 px-3">
+            <Search className="h-5 w-5 shrink-0 text-[#6F675F]" aria-hidden="true" />
             <span className="sr-only">Search cafés</span>
-            <input data-testid="coffee-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cafés, neighborhoods or vibes" className="w-full bg-transparent text-sm outline-none placeholder:text-[#8C847C]" />
+            <input data-testid="coffee-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search cafés, neighborhoods or vibes" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#8C847C]" />
             {search && <button aria-label="Clear search" onClick={() => setSearch('')} className="icon-button"><X className="h-4 w-4" /></button>}
           </label>
           <div className="my-1 hidden w-px bg-[#EAE3D8] sm:block" />
-          <select aria-label="Select township" value={township} onChange={(e) => setTownship(e.target.value)} className="min-h-12 w-full rounded-xl bg-transparent px-3 text-sm font-semibold outline-none sm:w-44">
+          <select aria-label="Select township" value={township} onChange={(e) => setTownship(e.target.value)} className="min-h-12 min-w-0 w-full rounded-xl bg-transparent px-3 text-sm font-semibold outline-none">
             <option value="all">All townships</option>{townships.map((item) => <option key={item}>{item}</option>)}
           </select>
-          <button onClick={onRequestLocation} className="button-primary w-full sm:w-auto"><Crosshair className="h-4 w-4" /> Near me</button>
+          <button
+            onClick={requestNearby}
+            disabled={nearMeActive && locationLoading}
+            aria-pressed={nearMeActive}
+            className={`button-primary w-full sm:w-auto ${nearMeActive ? 'ring-2 ring-[#28613E] ring-offset-2' : ''} disabled:cursor-wait disabled:opacity-70`}
+          >
+            <Crosshair className="h-4 w-4" />
+            {nearMeActive && locationLoading ? 'Finding you...' : nearMeActive && location ? 'Nearest first' : 'Near me'}
+          </button>
         </div>
+        {nearMeActive && locationError && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{locationError.message}</p>}
         <FilterChips active={activeFilter} onChange={setActiveFilter} />
       </div>
       <div className="mt-9 min-w-0 lg:mt-0">
@@ -162,8 +204,8 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
 
     <section id="recommended" className="page-shell section-space">
       <SectionHeader title="Recommended for you" text="Handpicked cafés based on what you might love." action={filtered.length > 3 ? (showAll ? 'Show less' : 'See all') : undefined} onAction={() => setShowAll(!showAll)} />
-      {recommendations.length ? <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {recommendations.map((shop) => <CafeCard key={shop.id} shop={shop} favorite={isFavorite(shop.id)} canFavorite={!!user} onFavorite={() => toggleFavorite(shop.id)} onOpen={() => openShop(shop)} location={location} />)}
+      {recommendations.length ? <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+        {recommendations.map((shop) => <CafeCard key={shop.id} shop={shop} favorite={isFavorite(shop.id)} canFavorite={!!user} onFavorite={() => toggleFavorite(shop.id)} onOpen={() => openShop(shop)} />)}
       </div> : <div className="mt-8 rounded-3xl border border-dashed border-[#D8CEC0] p-12 text-center"><Coffee className="mx-auto mb-3 h-8 w-8 text-[#B5663D]" /><h3 className="font-bold">No cafés match those filters</h3><p className="mt-2 text-sm text-[#6F675F]">Try another township, mood, or search term.</p><button className="mt-5 text-sm font-bold text-[#28613E]" onClick={() => { setSearch(''); setTownship('all'); setActiveFilter(null); }}>Clear all filters</button></div>}
     </section>
 
@@ -185,17 +227,17 @@ const FilterChips = ({ active, onChange }: { active: string | null; onChange: (v
     { key: 'open', label: 'Open now', icon: Coffee }, { key: 'quiet', label: 'Quiet', icon: BookOpen }, { key: 'outdoor', label: 'Outdoor', icon: Sun },
     { key: 'wifi', label: 'Wi-Fi', icon: Wifi }, { key: 'specialty', label: 'Specialty coffee', icon: Sparkles },
   ];
-  return <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-2" aria-label="Quick filters">{filters.map(({ key, label, icon: Icon }) => <button key={key} aria-pressed={active === key} onClick={() => onChange(active === key ? null : key)} className={`filter-chip ${active === key ? 'filter-chip-active' : ''}`}><Icon className="h-4 w-4" />{label}</button>)}<button className="filter-chip" onClick={() => document.querySelector<HTMLSelectElement>('select[aria-label="Select township"]')?.focus()}><SlidersHorizontal className="h-4 w-4" />More filters</button></div>;
+  return <div className="no-scrollbar -mx-4 mt-4 flex max-w-[calc(100%+2rem)] gap-2 overflow-x-auto px-4 pb-2 pr-8 sm:mx-0 sm:max-w-full sm:px-0 sm:pr-0" aria-label="Quick filters">{filters.map(({ key, label, icon: Icon }) => <button key={key} aria-pressed={active === key} onClick={() => onChange(active === key ? null : key)} className={`filter-chip shrink-0 ${active === key ? 'filter-chip-active' : ''}`}><Icon className="h-4 w-4" />{label}</button>)}<button className="filter-chip shrink-0" onClick={() => document.querySelector<HTMLSelectElement>('select[aria-label="Select township"]')?.focus()}><SlidersHorizontal className="h-4 w-4" />More filters</button></div>;
 };
 
-const SectionHeader = ({ title, text, action, onAction }: { title: string; text: string; action?: string; onAction?: () => void }) => <div className="flex items-end justify-between gap-5"><div><h2 className="text-3xl font-bold tracking-tight text-[#241711] sm:text-4xl">{title}</h2><p className="mt-2 text-[#6F675F]">{text}</p></div>{action && <button onClick={onAction} className="hidden items-center gap-1 text-sm font-bold text-[#28613E] sm:flex">{action}<ChevronRight className="h-4 w-4" /></button>}</div>;
+const SectionHeader = ({ title, text, action, onAction }: { title: string; text: string; action?: string; onAction?: () => void }) => <div className="flex min-w-0 items-end justify-between gap-3 sm:gap-5"><div className="min-w-0"><h2 className="text-3xl font-bold tracking-tight text-[#241711] sm:text-4xl">{title}</h2><p className="mt-2 text-[#6F675F]">{text}</p></div>{action && <button onClick={onAction} className="flex shrink-0 items-center gap-1 text-sm font-bold text-[#28613E]">{action}<ChevronRight className="h-4 w-4" /></button>}</div>;
 
-const CafeCard = ({ shop, favorite, canFavorite, onFavorite, onOpen, location }: { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void; location?: UserLocation | null }) => {
-  const distance = location ? CoffeeShopService.calculateDistance(location.latitude, location.longitude, shop.latitude, shop.longitude) : shop.distance;
-  return <article className="cafe-card" onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }} tabIndex={0} role="button">
+const CafeCard = ({ shop, favorite, canFavorite, onFavorite, onOpen }: { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void }) => {
+  const distance = shop.distance;
+  return <article className="cafe-card min-w-0 w-full" onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }} tabIndex={0} role="button">
     <div className="relative aspect-[4/3] overflow-hidden"><img src={getImage(shop)} alt={`${shop.name} café`} loading="lazy" width="520" height="390" className="h-full w-full object-cover" /><span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#28613E]">{shop.hours ? 'Hours available' : 'Hours unavailable'}</span><button disabled={!canFavorite} onClick={(e) => { e.stopPropagation(); onFavorite(); }} aria-label={favorite ? `Remove ${shop.name} from wishlist` : `Add ${shop.name} to wishlist`} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#4A2D1F] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"><Heart className={`h-5 w-5 ${favorite ? 'fill-[#B5663D] text-[#B5663D]' : ''}`} /></button></div>
-    <div className="p-5"><div className="flex items-start justify-between gap-3"><h3 className="line-clamp-1 text-xl font-bold">{shop.name}</h3><span className="flex items-center gap-1 text-sm font-bold"><Star className="h-4 w-4 fill-[#F5A623] text-[#F5A623]" />{shop.rating || 'New'}</span></div><div className="mt-2 flex items-center gap-2 text-sm text-[#6F675F]"><MapPin className="h-4 w-4 shrink-0" /><span className="line-clamp-1">{shop.provision || shop.address}</span>{distance != null && <><span>·</span><span>{distance.toFixed(1)} km</span></>}</div><div className="mt-4 flex flex-wrap gap-2">{[shop.type, ...(shop.tags || [])].filter(Boolean).slice(0, 3).map((tag) => <span key={tag} className="rounded-full bg-[#F2ECE2] px-3 py-1 text-xs font-semibold text-[#4A2D1F]">{String(tag).replace(/_/g, ' ')}</span>)}</div></div>
+    <div className="min-w-0 p-5"><div className="flex min-w-0 items-start justify-between gap-3"><h3 className="line-clamp-2 min-w-0 text-xl font-bold">{shop.name}</h3><span className="flex shrink-0 items-center gap-1 text-sm font-bold"><Star className="h-4 w-4 fill-[#F5A623] text-[#F5A623]" />{shop.rating || 'New'}</span></div><div className="mt-2 flex min-w-0 items-start gap-2 text-sm text-[#6F675F]"><MapPin className="mt-0.5 h-4 w-4 shrink-0" /><span className="line-clamp-2 min-w-0">{shop.provision || shop.address}</span>{distance != null && <><span className="shrink-0">·</span><span className="shrink-0">{distance.toFixed(1)} km</span></>}</div><div className="mt-4 flex flex-wrap gap-2">{[shop.type, ...(shop.tags || [])].filter(Boolean).slice(0, 3).map((tag) => <span key={tag} className="max-w-full truncate rounded-full bg-[#F2ECE2] px-3 py-1 text-xs font-semibold text-[#4A2D1F]">{String(tag).replace(/_/g, ' ')}</span>)}</div></div>
   </article>;
 };
 
-const ExploreNearby = ({ location, onRequestLocation }: { location?: UserLocation | null; onRequestLocation?: () => void }) => <section id="map" className="page-shell section-space"><div className="overflow-hidden rounded-[28px] bg-[#28613E] text-white lg:grid lg:grid-cols-2"><div className="p-8 sm:p-12 lg:p-16"><p className="text-xs font-bold tracking-[.18em] text-[#C9DFC8]">YOUR NEXT CUP, CLOSER</p><h2 className="mt-4 text-3xl font-bold sm:text-4xl">Explore nearby</h2><p className="mt-4 max-w-md text-[#E1EBE1]">See great cafés around you on the map.</p><ul className="mt-7 space-y-3 text-sm text-[#F7FBF7]"><li>✓ Real-time locations</li><li>✓ Opening hours</li><li>✓ Photos and reviews</li></ul><button onClick={onRequestLocation} className="mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-white px-6 font-bold text-[#28613E]"><MapPin className="h-4 w-4" />{location ? 'Refresh location' : 'Open Map'}</button></div><div className="map-preview" aria-label="Stylized map preview of Yangon"><div className="map-road road-one"/><div className="map-road road-two"/><MapPin className="map-pin left-[28%] top-[36%]"/><MapPin className="map-pin left-[64%] top-[58%]"/><div className="absolute bottom-6 left-6 rounded-xl bg-white p-3 text-sm font-bold text-[#241711] shadow-lg">Yangon cafés near you</div></div></div></section>;
+const ExploreNearby = ({ location, onRequestLocation }: { location?: UserLocation | null; onRequestLocation?: () => void }) => <section id="map" className="page-shell section-space"><div className="min-w-0 overflow-hidden rounded-[24px] bg-[#28613E] text-white sm:rounded-[28px] lg:grid lg:grid-cols-2"><div className="min-w-0 p-6 sm:p-12 lg:p-16"><p className="text-xs font-bold tracking-[.18em] text-[#C9DFC8]">YOUR NEXT CUP, CLOSER</p><h2 className="mt-4 text-3xl font-bold sm:text-4xl">Explore nearby</h2><p className="mt-4 max-w-md text-[#E1EBE1]">See great cafés around you on the map.</p><ul className="mt-7 space-y-3 text-sm text-[#F7FBF7]"><li>✓ Real-time locations</li><li>✓ Opening hours</li><li>✓ Photos and reviews</li></ul><button onClick={onRequestLocation} className="mt-8 inline-flex min-h-12 max-w-full items-center gap-2 rounded-full bg-white px-6 font-bold text-[#28613E]"><MapPin className="h-4 w-4 shrink-0" />{location ? 'Refresh location' : 'Open Map'}</button></div><div className="map-preview" aria-label="Stylized map preview of Yangon"><div className="map-road road-one"/><div className="map-road road-two"/><MapPin className="map-pin left-[28%] top-[36%]"/><MapPin className="map-pin left-[64%] top-[58%]"/><div className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-xl bg-white p-3 text-sm font-bold text-[#241711] shadow-lg sm:bottom-6 sm:left-6">Yangon cafés near you</div></div></div></section>;
