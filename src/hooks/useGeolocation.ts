@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { UserLocation, LocationError } from '../types/restaurant';
 
 interface GeolocationState {
@@ -14,7 +14,7 @@ export const useGeolocation = () => {
     error: null,
   });
 
-  const getCurrentPosition = () => {
+  const getCurrentPosition = useCallback(() => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     if (!navigator.geolocation) {
@@ -23,7 +23,7 @@ export const useGeolocation = () => {
         loading: false,
         error: {
           code: 0,
-          message: 'Geolocation is not supported by this browser'
+          message: 'Your browser does not support location services. Try searching by township instead.'
         }
       }));
       return;
@@ -43,17 +43,17 @@ export const useGeolocation = () => {
         });
       },
       (error) => {
-        let errorMessage = 'Failed to get location';
+        let errorMessage = 'We could not find your location. Please try again.';
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user';
+            errorMessage = 'Location permission was denied. Please allow location access in your browser settings and try again.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information is unavailable';
+            errorMessage = 'Your location is currently unavailable. Please check your device settings and try again.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
+            errorMessage = 'Finding your location took too long. Please try again.';
             break;
         }
 
@@ -69,14 +69,14 @@ export const useGeolocation = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000, // 5 minutes
+        maximumAge: 60000,
       }
     );
-  };
+  }, []);
 
   useEffect(() => {
     getCurrentPosition();
-  }, []);
+  }, [getCurrentPosition]);
 
   return {
     ...state,
