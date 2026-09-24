@@ -19,7 +19,7 @@ function App() {
     <SiteNavbar user={user} onSignIn={() => setAuthOpen(true)} onSignOut={async () => { await signOut(); navigateHome(); }} onHome={navigateHome} onWishlist={navigateWishlist} />
     <main>
       {view === 'wishlist' && user
-        ? <div className="page-shell min-h-[70vh] py-10"><button onClick={navigateHome} className="mb-6 text-sm font-bold text-[#28613E]">← Back to discover</button><WishlistView user={user} /></div>
+        ? <div className="page-shell min-h-[70vh] py-6 sm:py-10"><button onClick={navigateHome} className="mb-4 min-h-11 text-sm font-bold text-[#28613E] sm:mb-6">← Back to discover</button><WishlistView user={user} /></div>
         : <CoffeeShopList user={user} location={location} locationLoading={locationLoading} locationError={locationError} onRequestLocation={refetch} />}
     </main>
     {view === 'home' && <><PwaInstallBanner /><SiteFooter onHome={navigateHome} /></>}

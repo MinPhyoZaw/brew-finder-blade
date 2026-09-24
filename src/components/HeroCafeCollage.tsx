@@ -33,16 +33,16 @@ const prepareHeroImages = (images: unknown[]): string[] => {
 export function HeroCafeCollage({ images }: { images: unknown[] }) {
   const sources = useMemo(() => prepareHeroImages(images), [images]);
   const panels = [
-    'left-0 top-0 h-[61%] w-[58%] rounded-[28px_18px_44px_18px] sm:rounded-[44px_24px_68px_24px]',
-    'right-0 top-0 h-[41%] w-[39%] rounded-[18px_30px_18px_40px] sm:rounded-[28px_48px_28px_64px]',
-    'bottom-0 left-0 h-[35%] w-[66%] rounded-[18px_40px_20px_30px] sm:rounded-[24px_60px_28px_48px]',
-    'bottom-0 right-0 h-[56%] w-[31%] rounded-[40px_18px_30px_20px] sm:rounded-[64px_24px_48px_28px]',
+    'absolute left-0 top-0 h-[57%] w-[58%] overflow-hidden rounded-[28px_14px_36px_14px] bg-[#E9DFD1] sm:rounded-[44px_24px_68px_24px]',
+    'absolute right-0 top-0 h-[42%] w-[39%] overflow-hidden rounded-[14px_28px_14px_36px] bg-[#E9DFD1] sm:rounded-[28px_48px_28px_64px]',
+    'absolute bottom-0 left-0 h-[38%] w-[55%] overflow-hidden rounded-[14px_36px_18px_28px] bg-[#E9DFD1] sm:rounded-[24px_60px_28px_48px]',
+    'absolute bottom-0 right-0 h-[53%] w-[42%] overflow-hidden rounded-[36px_14px_28px_18px] bg-[#E9DFD1] sm:rounded-[64px_24px_48px_28px]',
   ];
 
   return (
-    <div className="relative h-[310px] w-full sm:h-[370px] lg:h-[430px]" aria-label="Yangon café highlights">
+    <div className="relative h-[280px] w-full max-w-full min-w-0 sm:h-[340px] lg:h-[430px]" aria-label="Yangon café highlights">
       {sources.map((source, index) => (
-        <div key={`${source}-${index}`} className={`absolute overflow-hidden bg-[#E9DFD1] ${panels[index]}`}>
+        <div key={`${source}-${index}`} className={panels[index]}>
           <img
             src={source}
             alt={IMAGE_ALTS[index]}
@@ -58,7 +58,7 @@ export function HeroCafeCollage({ images }: { images: unknown[] }) {
           />
         </div>
       ))}
-      <div className="absolute bottom-3 left-3 z-10 flex max-w-[58%] items-center gap-2 rounded-full bg-[#3A2318]/90 px-3 py-2 text-xs font-semibold leading-4 text-white shadow-md backdrop-blur-sm sm:bottom-4 sm:left-4 sm:max-w-[60%] sm:px-4 sm:text-sm">
+      <div className="absolute bottom-2 left-2 z-10 flex max-w-[52%] items-center gap-1.5 rounded-2xl bg-[#3A2318]/90 px-2.5 py-1.5 text-[10px] font-semibold leading-3 text-white shadow-md backdrop-blur-sm sm:bottom-4 sm:left-4 sm:max-w-[60%] sm:gap-2 sm:rounded-full sm:px-4 sm:py-2 sm:text-sm sm:leading-4">
         <MapPin className="h-4 w-4 shrink-0 text-[#D47A45]" aria-hidden="true" />
         <span>Yangon’s café culture is waiting for you</span>
       </div>

@@ -161,22 +161,22 @@ export const CoffeeShopDetail: React.FC<CoffeeShopDetailProps> = ({ coffeeShop, 
   
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4">
+      <div className="max-h-[calc(100dvh-1rem)] w-[calc(100%-0.5rem)] max-w-4xl overflow-y-auto overflow-x-hidden rounded-xl bg-white backdrop-blur-md sm:max-h-[90vh]">
         {/* Header */}
-        <div className="sticky top-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 p-6 flex items-center justify-between">
+        <div className="sticky top-0 z-20 flex min-w-0 items-center justify-between border-b border-gray-200 bg-white/95 p-3 backdrop-blur-sm sm:p-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               {/* Mobile back button */}
               <button
                 onClick={onClose}
-                className="sm:hidden p-2 -ml-2 mr-1 rounded-full hover:bg-gray-100 transition-colors duration-150"
+                className="-ml-1 grid h-11 w-11 shrink-0 place-items-center rounded-full hover:bg-gray-100 sm:hidden"
                 aria-label="Back"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
 
-              <h2 className="text-1xl font-bold text-gray-900 ">{coffeeShop.name}</h2>
+              <h2 className="min-w-0 flex-1 break-words text-base font-bold text-gray-900 sm:text-xl">{coffeeShop.name}</h2>
 
               {isOpenNow !== null && (
                 <span
@@ -261,10 +261,10 @@ export const CoffeeShopDetail: React.FC<CoffeeShopDetailProps> = ({ coffeeShop, 
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="space-y-4 p-3 sm:space-y-6 sm:p-6">
           {/* Image Slideshow (lazy) - responsive heights for mobile/desktop */}
           <div className="w-full">
-            <div className="w-full h-56 sm:h-96 rounded-lg overflow-hidden bg-gray-100">
+            <div className="h-52 w-full overflow-hidden rounded-lg bg-gray-100 sm:h-96">
               <Suspense fallback={<div className="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">Loading images...</div>}>
                 <ImageSlideshow images={coffeeShop.images || []} restaurantName={coffeeShop.name} />
               </Suspense>
@@ -273,12 +273,12 @@ export const CoffeeShopDetail: React.FC<CoffeeShopDetailProps> = ({ coffeeShop, 
 
           {/* ✨ About Section */}
           {coffeeShop.description && (
-            <div className="relative bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl shadow-lg p-6 transition-transform hover:scale-[1.01]">
+            <div className="relative min-w-0 rounded-2xl border border-white/30 bg-white/20 p-4 shadow-lg backdrop-blur-md sm:p-6">
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent rounded-2xl pointer-events-none"></div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3 drop-shadow-sm">
                 About
               </h3>
-              <p className="text-gray-700 leading-relaxed text-sm md:text-base drop-shadow-sm">
+              <p className="break-words text-sm leading-relaxed text-gray-700 drop-shadow-sm md:text-base">
                 {coffeeShop.description}
               </p>
             </div>
