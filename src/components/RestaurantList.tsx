@@ -8,10 +8,72 @@ import { useFavorites } from '../hooks/useFavorites';
 import type { CoffeeShop, UserLocation } from '../types/restaurant';
 import type { User } from '../types/auth';
 import { LoadingSpinner } from './LoadingSpinner';
-import { HeroCafeCollage } from './HeroCafeCollage';
 
 const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then((m) => ({ default: m.CoffeeShopDetail })));
 const FALLBACK_IMAGE = 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg';
+const HERO_FALLBACK_IMAGES = [
+  'https://images.pexels.com/photos/262047/pexels-photo-262047.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'https://images.pexels.com/photos/2079246/pexels-photo-2079246.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'https://images.pexels.com/photos/2467287/pexels-photo-2467287.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=1000',
+] as const;
+const HERO_IMAGE_ALTS = [
+  'Warm modern cafe interior in Yangon',
+  'Outdoor garden cafe in Yangon',
+  'Welcoming Yangon cafe storefront',
+  'Fresh latte prepared by a barista',
+] as const;
+
+const isValidImageSource = (source: unknown): source is string => {
+  if (typeof source !== 'string' || !source.trim()) return false;
+  const value = source.trim();
+  return value.startsWith('/') || value.startsWith('data:image/') || /^https?:\/\//i.test(value);
+};
+
+const prepareHeroImages = (images: unknown[]): string[] => {
+  const sources = Array.from(new Set(images.filter(isValidImageSource).map((image) => image.trim())));
+
+  for (const fallback of HERO_FALLBACK_IMAGES) {
+    if (sources.length >= 4) break;
+    if (!sources.includes(fallback)) sources.push(fallback);
+  }
+
+  return sources.slice(0, 4);
+};
+
+function HeroCafeCollage({ images }: { images: unknown[] }) {
+  const sources = useMemo(() => prepareHeroImages(images), [images]);
+  const panels = [
+    'left-0 top-0 h-[61%] w-[58%] rounded-[44px_24px_68px_24px]',
+    'right-0 top-0 h-[41%] w-[39%] rounded-[28px_48px_28px_64px]',
+    'bottom-0 left-0 h-[35%] w-[66%] rounded-[24px_60px_28px_48px]',
+    'bottom-0 right-0 h-[56%] w-[31%] rounded-[64px_24px_48px_28px]',
+  ];
+
+  return <div className="relative h-[310px] w-full sm:h-[370px] lg:h-[430px]" aria-label="Yangon cafe highlights">
+    {sources.map((source, index) => <div
+      key={`${source}-${index}`}
+      className={`absolute overflow-hidden bg-[#E9DFD1] shadow-[0_18px_45px_rgba(58,35,24,0.12)] ${panels[index]}`}
+    >
+      <img
+        src={source}
+        alt={HERO_IMAGE_ALTS[index]}
+        fetchPriority={index === 0 ? 'high' : undefined}
+        loading={index === 0 ? 'eager' : 'lazy'}
+        className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+        onError={(event) => {
+          event.currentTarget.onerror = null;
+          event.currentTarget.src = HERO_FALLBACK_IMAGES[index];
+        }}
+      />
+    </div>)}
+
+    <div className="absolute bottom-3 left-3 z-10 flex max-w-[62%] items-center gap-2 rounded-full bg-[#3A2318]/90 px-3 py-2 text-xs font-semibold leading-4 text-white shadow-lg backdrop-blur-sm sm:bottom-4 sm:left-4 sm:px-4 sm:text-sm">
+      <MapPin className="h-4 w-4 shrink-0 text-[#D47A45]" aria-hidden="true" />
+      <span>Yangon's cafe culture is waiting for you</span>
+    </div>
+  </div>;
+}
 
 interface CoffeeShopListProps { user: User | null; location?: UserLocation | null; onRequestLocation?: () => void; }
 
