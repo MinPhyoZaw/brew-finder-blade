@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { CoffeeShopService } from '../services/restaurantService';
 import { useFavorites } from '../hooks/useFavorites';
-import type { CoffeeShop, UserLocation } from '../types/restaurant';
+import type { CoffeeShop, LocationError, UserLocation } from '../types/restaurant';
 import type { User } from '../types/auth';
 import { LoadingSpinner } from './LoadingSpinner';
 import { HeroCafeCollage } from './HeroCafeCollage';
@@ -13,12 +13,24 @@ import { HeroCafeCollage } from './HeroCafeCollage';
 const CoffeeShopDetail = lazy(() => import('./RestaurantDetail').then((m) => ({ default: m.CoffeeShopDetail })));
 const FALLBACK_IMAGE = 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg';
 
-interface CoffeeShopListProps { user: User | null; location?: UserLocation | null; onRequestLocation?: () => void; }
+interface CoffeeShopListProps {
+  user: User | null;
+  location?: UserLocation | null;
+  locationLoading?: boolean;
+  locationError?: LocationError | null;
+  onRequestLocation?: () => void;
+}
 
 const normalize = (value = '') => value.toLowerCase().replace(/\s*&\s*/g, '_').replace(/[\s-]+/g, '_');
 const getImage = (shop?: CoffeeShop) => shop?.images?.[0] || FALLBACK_IMAGE;
+const hasValidCoordinates = (shop: CoffeeShop) => Number.isFinite(shop.latitude)
+  && Number.isFinite(shop.longitude)
+  && shop.latitude >= -90
+  && shop.latitude <= 90
+  && shop.longitude >= -180
+  && shop.longitude <= 180;
 
-export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, onRequestLocation }) => {
+export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, locationLoading = false, locationError, onRequestLocation }) => {
   const [shops, setShops] = useState<CoffeeShop[]>([]);
   const [search, setSearch] = useState('');
   const [township, setTownship] = useState('all');
@@ -27,6 +39,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
   const [selected, setSelected] = useState<CoffeeShop | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [nearMeActive, setNearMeActive] = useState(false);
   const { toggleFavorite, isFavorite } = useFavorites(user);
 
   useEffect(() => {
@@ -51,13 +64,33 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
     return tags.includes(activeFilter);
   }), [activeFilter, search, shops, township]);
 
-  const recommendations = showAll ? filtered : filtered.slice(0, 3);
+  const nearbyResults = useMemo(() => {
+    const withDistances = filtered.map((shop) => ({
+      ...shop,
+      distance: location && hasValidCoordinates(shop)
+        ? CoffeeShopService.calculateDistance(location.latitude, location.longitude, shop.latitude, shop.longitude)
+        : undefined,
+    }));
+
+    if (!nearMeActive || !location) return withDistances;
+
+    return withDistances.sort((a, b) => {
+      if (a.distance == null) return b.distance == null ? 0 : 1;
+      if (b.distance == null) return -1;
+      return a.distance - b.distance;
+    });
+  }, [filtered, location, nearMeActive]);
+  const recommendations = showAll ? nearbyResults : nearbyResults.slice(0, 3);
   const heroImages = useMemo(() => shops.flatMap((shop) => shop.images || []), [shops]);
 
   const openShop = useCallback((shop: CoffeeShop) => setSelected(shop), []);
   const chooseMood = (key: string) => {
     setActiveFilter(key);
     requestAnimationFrame(() => document.getElementById('recommended')?.scrollIntoView({ behavior: 'smooth' }));
+  };
+  const requestNearby = () => {
+    setNearMeActive(true);
+    onRequestLocation?.();
   };
 
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><LoadingSpinner /></div>;
@@ -89,8 +122,17 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
           <select aria-label="Select township" value={township} onChange={(e) => setTownship(e.target.value)} className="min-h-12 w-full rounded-xl bg-transparent px-3 text-sm font-semibold outline-none sm:w-44">
             <option value="all">All townships</option>{townships.map((item) => <option key={item}>{item}</option>)}
           </select>
-          <button onClick={onRequestLocation} className="button-primary w-full sm:w-auto"><Crosshair className="h-4 w-4" /> Near me</button>
+          <button
+            onClick={requestNearby}
+            disabled={nearMeActive && locationLoading}
+            aria-pressed={nearMeActive}
+            className={`button-primary w-full sm:w-auto ${nearMeActive ? 'ring-2 ring-[#28613E] ring-offset-2' : ''} disabled:cursor-wait disabled:opacity-70`}
+          >
+            <Crosshair className="h-4 w-4" />
+            {nearMeActive && locationLoading ? 'Finding you...' : nearMeActive && location ? 'Nearest first' : 'Near me'}
+          </button>
         </div>
+        {nearMeActive && locationError && <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{locationError.message}</p>}
         <FilterChips active={activeFilter} onChange={setActiveFilter} />
       </div>
       <div className="mt-9 min-w-0 lg:mt-0">
@@ -101,7 +143,7 @@ export const CoffeeShopList: React.FC<CoffeeShopListProps> = ({ user, location, 
     <section id="recommended" className="page-shell section-space">
       <SectionHeader title="Recommended for you" text="Handpicked cafés based on what you might love." action={filtered.length > 3 ? (showAll ? 'Show less' : 'See all') : undefined} onAction={() => setShowAll(!showAll)} />
       {recommendations.length ? <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {recommendations.map((shop) => <CafeCard key={shop.id} shop={shop} favorite={isFavorite(shop.id)} canFavorite={!!user} onFavorite={() => toggleFavorite(shop.id)} onOpen={() => openShop(shop)} location={location} />)}
+        {recommendations.map((shop) => <CafeCard key={shop.id} shop={shop} favorite={isFavorite(shop.id)} canFavorite={!!user} onFavorite={() => toggleFavorite(shop.id)} onOpen={() => openShop(shop)} />)}
       </div> : <div className="mt-8 rounded-3xl border border-dashed border-[#D8CEC0] p-12 text-center"><Coffee className="mx-auto mb-3 h-8 w-8 text-[#B5663D]" /><h3 className="font-bold">No cafés match those filters</h3><p className="mt-2 text-sm text-[#6F675F]">Try another township, mood, or search term.</p><button className="mt-5 text-sm font-bold text-[#28613E]" onClick={() => { setSearch(''); setTownship('all'); setActiveFilter(null); }}>Clear all filters</button></div>}
     </section>
 
@@ -128,8 +170,8 @@ const FilterChips = ({ active, onChange }: { active: string | null; onChange: (v
 
 const SectionHeader = ({ title, text, action, onAction }: { title: string; text: string; action?: string; onAction?: () => void }) => <div className="flex items-end justify-between gap-5"><div><h2 className="text-3xl font-bold tracking-tight text-[#241711] sm:text-4xl">{title}</h2><p className="mt-2 text-[#6F675F]">{text}</p></div>{action && <button onClick={onAction} className="hidden items-center gap-1 text-sm font-bold text-[#28613E] sm:flex">{action}<ChevronRight className="h-4 w-4" /></button>}</div>;
 
-const CafeCard = ({ shop, favorite, canFavorite, onFavorite, onOpen, location }: { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void; location?: UserLocation | null }) => {
-  const distance = location ? CoffeeShopService.calculateDistance(location.latitude, location.longitude, shop.latitude, shop.longitude) : shop.distance;
+const CafeCard = ({ shop, favorite, canFavorite, onFavorite, onOpen }: { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void }) => {
+  const distance = shop.distance;
   return <article className="cafe-card" onClick={onOpen} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(); }} tabIndex={0} role="button">
     <div className="relative aspect-[4/3] overflow-hidden"><img src={getImage(shop)} alt={`${shop.name} café`} loading="lazy" width="520" height="390" className="h-full w-full object-cover" /><span className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-[#28613E]">{shop.hours ? 'Hours available' : 'Hours unavailable'}</span><button disabled={!canFavorite} onClick={(e) => { e.stopPropagation(); onFavorite(); }} aria-label={favorite ? `Remove ${shop.name} from wishlist` : `Add ${shop.name} to wishlist`} className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white text-[#4A2D1F] shadow-sm disabled:cursor-not-allowed disabled:opacity-60"><Heart className={`h-5 w-5 ${favorite ? 'fill-[#B5663D] text-[#B5663D]' : ''}`} /></button></div>
     <div className="p-5"><div className="flex items-start justify-between gap-3"><h3 className="line-clamp-1 text-xl font-bold">{shop.name}</h3><span className="flex items-center gap-1 text-sm font-bold"><Star className="h-4 w-4 fill-[#F5A623] text-[#F5A623]" />{shop.rating || 'New'}</span></div><div className="mt-2 flex items-center gap-2 text-sm text-[#6F675F]"><MapPin className="h-4 w-4 shrink-0" /><span className="line-clamp-1">{shop.provision || shop.address}</span>{distance != null && <><span>·</span><span>{distance.toFixed(1)} km</span></>}</div><div className="mt-4 flex flex-wrap gap-2">{[shop.type, ...(shop.tags || [])].filter(Boolean).slice(0, 3).map((tag) => <span key={tag} className="rounded-full bg-[#F2ECE2] px-3 py-1 text-xs font-semibold text-[#4A2D1F]">{String(tag).replace(/_/g, ' ')}</span>)}</div></div>
