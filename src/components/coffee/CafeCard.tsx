@@ -1,0 +1,12 @@
+import { Heart, MapPin, Star } from 'lucide-react';
+import type { CoffeeShop } from '../../types/restaurant';
+import { formatDistance } from '../../utils/coffeeShopDistance';
+import { getCoffeeShopImage } from '../../utils/coffeeShopImages';
+
+export interface CafeCardProps { shop: CoffeeShop; favorite: boolean; canFavorite: boolean; onFavorite: () => void; onOpen: () => void; }
+export function CafeCard({ shop, favorite, canFavorite, onFavorite, onOpen }: CafeCardProps) {
+  return <article className="cafe-card min-w-0 w-full" onClick={onOpen} onKeyDown={(event) => event.key === 'Enter' && onOpen()} tabIndex={0} role="button">
+    <div className="relative aspect-[4/3] overflow-hidden"><img src={getCoffeeShopImage(shop)} alt={`${shop.name} café`} loading="lazy" width="520" height="390" className="h-full w-full object-cover" /><span className="absolute left-2 top-2 max-w-[calc(100%-3.25rem)] truncate rounded-full bg-white/95 px-2 py-1 text-[9px] font-bold text-[#28613E] sm:left-3 sm:top-3 sm:px-3 sm:text-xs">{shop.hours || 'Hours unavailable'}</span><button disabled={!canFavorite} onClick={(event) => { event.stopPropagation(); onFavorite(); }} aria-label={`${favorite ? 'Remove' : 'Add'} ${shop.name} ${favorite ? 'from' : 'to'} wishlist`} className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full bg-white shadow-sm disabled:opacity-60 sm:h-10 sm:w-10"><Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${favorite ? 'fill-[#B5663D] text-[#B5663D]' : ''}`} /></button></div>
+    <div className="min-w-0 p-3 sm:p-4 lg:p-5"><div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"><h3 className="line-clamp-2 min-w-0 text-sm font-bold leading-5 sm:text-base lg:text-xl">{shop.name}</h3><span className="flex shrink-0 items-center gap-1 text-xs font-bold sm:text-sm"><Star className="h-3.5 w-3.5 fill-[#F5A623] text-[#F5A623]" />{shop.rating || 'New'}</span></div><div className="mt-2 flex min-w-0 items-center gap-1 text-xs text-[#6F675F] sm:text-sm"><MapPin className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{shop.provision || shop.address}</span>{shop.distance != null && <span className="hidden shrink-0 sm:inline">{formatDistance(shop.distance)}</span>}</div><div className="mt-3 flex min-w-0 gap-1.5 sm:flex-wrap">{[shop.type, ...(shop.tags ?? [])].filter(Boolean).slice(0, 2).map((tag) => <span key={tag} className="min-w-0 truncate rounded-full bg-[#F2ECE2] px-2 py-1 text-[10px] font-semibold sm:text-xs">{tag.replace(/_/g, ' ')}</span>)}</div></div>
+  </article>;
+}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { AuthModal } from './components/AuthModal';
-import { SiteFooter, SiteNavbar, PwaInstallBanner } from './components/SiteLayout';
+import { AuthModal } from './components/auth/AuthModal';
+import { SiteFooter } from './components/layout/SiteFooter';
+import { SiteNavbar } from './components/layout/SiteNavbar';
+import { PwaInstallBanner } from './components/layout/PwaInstallBanner';
 import { CoffeeShopList } from './components/RestaurantList';
 import { WishlistView } from './components/WishlistView';
 import { useAuth } from './hooks/useAuth';
