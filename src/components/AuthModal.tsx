@@ -52,29 +52,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 bg-coffee-900 bg-opacity-50 flex items-center justify-center p-4 z-50 px-4"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-coffee-900/50 p-2 sm:p-4"
     >
-      <div className="bg-cream-50 rounded-xl max-w-4xl w-full mx-4 border border-coffee-200 overflow-hidden shadow-lg flex flex-col md:flex-row h-[80vh] max-h-[700px]">
+      <div className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-0.5rem)] max-w-4xl flex-col overflow-y-auto rounded-xl border border-coffee-200 bg-cream-50 shadow-lg md:max-h-[700px] md:flex-row">
         {/* Left: image / branding (50%) - on small screens this will be top and occupy 50% height */}
-        <div className="w-full md:w-1/2 h-1/2 md:h-auto flex items-center justify-center bg-gradient-to-br from-[#EBD7B3] to-[#F6E8D8] p-6">
-          <div className="flex flex-col items-center text-center px-6">
-            <img src="/brew-logo.png" alt="Brew Finder" className="w-36 h-36 rounded-full object-cover shadow-md mb-6" />
-            <h3 className="text-2xl font-bold text-coffee-900 logo-font">Brew Finder</h3>
-            <p className="text-sm text-coffee-800 mt-2">Find your perfect cup — one café at a time.</p>
+        <div className="flex w-full shrink-0 items-center justify-center bg-gradient-to-br from-[#EBD7B3] to-[#F6E8D8] p-3 md:w-1/2 md:p-6">
+          <div className="flex items-center gap-3 text-left md:flex-col md:px-6 md:text-center">
+            <img src="/brew-logo.png" alt="Brew Finder" className="h-14 w-14 rounded-full object-cover shadow-md md:mb-6 md:h-36 md:w-36" />
+            <div><h3 className="text-lg font-bold text-coffee-900 logo-font md:text-2xl">Brew Finder</h3>
+            <p className="mt-1 hidden text-sm text-coffee-800 min-[375px]:block md:mt-2">Find your perfect cup — one café at a time.</p></div>
           </div>
         </div>
 
   {/* Right: form (50%) */}
-  <div className="w-full md:w-1/2 h-1/2 md:h-auto p-6 overflow-auto relative flex flex-col">
+  <div className="relative flex w-full min-w-0 flex-col p-4 md:w-1/2 md:p-6">
           <button
             onClick={onClose}
             aria-label="Close auth modal"
-            className="absolute right-4 top-4 p-2 hover:bg-coffee-100 rounded-full transition-colors duration-200"
+            className="absolute right-2 top-2 grid h-11 w-11 place-items-center rounded-full hover:bg-coffee-100 transition-colors duration-200 md:right-4 md:top-4"
           >
             <X className="w-5 h-5 text-coffee-500" />
           </button>
 
-          <div className="mt-6 md:mt-2 w-full">
+          <div className="mt-7 w-full min-w-0 md:mt-2">
             <h2 className="text-2xl font-bold text-coffee-900 logo-font mb-1">
               {isLogin ? 'Sign In' : 'Sign Up'}
             </h2>
@@ -139,7 +139,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
               {error && (
                 <div className="bg-coffee-100 border border-coffee-300 rounded-lg p-3">
-                  <p className="text-coffee-800 text-sm">{error}</p>
+                  <p className="break-words text-sm text-coffee-800">{error}</p>
                 </div>
               )}
 

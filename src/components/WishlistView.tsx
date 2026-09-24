@@ -20,14 +20,14 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
 
   if (favorites.length === 0) {
     return (
-      <div className="text-center py-16">
-          <div className="bg-cream-50 rounded-xl shadow-sm p-12 border border-coffee-200">
-          <Home className="w-16 h-16 text-coffee-300 mx-auto mb-6" />
+      <div className="py-8 text-center sm:py-16">
+          <div className="rounded-xl border border-coffee-200 bg-cream-50 p-6 shadow-sm sm:p-12">
+          <Home className="mx-auto mb-4 h-12 w-12 text-coffee-300 sm:mb-6 sm:h-16 sm:w-16" />
           <h2 className="text-xl sm:text-2xl font-bold text-coffee-900 mb-4 font-serif">Your Brew List is Empty</h2>
-          <p className="text-coffee-600 text-lg mb-6">
+          <p className="mb-6 text-sm text-coffee-600 sm:text-lg">
             Start adding coffee shops to your brew list to see them here!
           </p>
-          <div className="flex items-center justify-center space-x-2 text-sm text-coffee-500">
+          <div className="flex min-w-0 items-start justify-center gap-2 text-xs text-coffee-500 sm:text-sm">
             <Coffee className="w-4 h-4" />
             <span>Browse coffee shops and click the heart icon to add favorites</span>
           </div>
@@ -39,18 +39,18 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-cream-50 rounded-xl shadow-sm border border-coffee-200 p-6">
-        <div className="flex items-center justify-between">
-            <div className="flex items-center">
+      <div className="rounded-xl border border-coffee-200 bg-cream-50 p-4 shadow-sm sm:p-6">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center">
             <Heart className="w-6 h-6 text-coffee-600 mr-3 fill-current" />
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl font-bold text-coffee-900 font-serif">My Brew List</h1>
               <p className="text-coffee-600">
                 {favorites.length} favorite coffee shop{favorites.length !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
-          <div className="bg-coffee-200 px-4 py-2 rounded-full">
+          <div className="shrink-0 rounded-full bg-coffee-200 px-2.5 py-1.5 sm:px-4 sm:py-2">
             <span className="text-coffee-800 font-medium text-sm">
               {favorites.length} saved
             </span>
@@ -59,15 +59,15 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
       </div>
 
       {/* Favorites Grid */}
-      <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-1">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2 xl:grid-cols-1">
         {favorites.map(coffeeShop => (
           <div 
             key={coffeeShop.id}
-            className="group bg-cream-50 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer transform hover:-translate-y-2 hover:scale-[1.02] border border-coffee-200 overflow-hidden"
+            className="group min-w-0 overflow-hidden rounded-2xl border border-coffee-200 bg-cream-50 shadow-lg transition-all duration-500 hover:shadow-2xl"
           >
             <div className="flex flex-col sm:flex-row">
               {/* Image */}
-              <div className="relative w-full sm:w-48 h-48 sm:h-48 flex-shrink-0 overflow-hidden">
+              <div className="relative aspect-[16/9] w-full flex-shrink-0 overflow-hidden sm:h-auto sm:w-48 sm:aspect-auto">
                 {/* 3D Coffee Cup Overlay */}
                 <div className="absolute top-4 left-4 z-10">
                   <div className="relative">
@@ -105,13 +105,13 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
               </div>
 
               {/* Content */}
-              <div className="flex-1 p-4 sm:p-6 flex flex-col justify-between bg-gradient-to-br from-cream-50 to-coffee-50/50">
+              <div className="flex min-w-0 flex-1 flex-col justify-between bg-gradient-to-br from-cream-50 to-coffee-50/50 p-4 sm:p-6">
                 <div onClick={() => setSelectedCoffeeShop(coffeeShop)}>
-                  <div className="flex justify-between items-start mb-2 sm:mb-3">
-                    <h3 className="text-lg sm:text-xl font-bold text-coffee-900 line-clamp-1 group-hover:text-coffee-600 transition-colors duration-300 font-serif">
+                  <div className="mb-2 flex min-w-0 items-start justify-between gap-2 sm:mb-3">
+                    <h3 className="min-w-0 break-words text-lg font-bold text-coffee-900 line-clamp-2 group-hover:text-coffee-600 transition-colors duration-300 font-serif sm:text-xl">
                       {coffeeShop.name}
                     </h3>
-                    <div className="flex items-center gap-1 ml-2 sm:ml-3 bg-cream-200 px-2 py-1 rounded-full">
+                    <div className="flex shrink-0 items-center gap-1 rounded-full bg-cream-200 px-2 py-1">
                       <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-cream-500 text-cream-500" />
                       <span className="text-xs sm:text-sm font-medium text-coffee-700">
                         {coffeeShop.rating}
@@ -126,11 +126,11 @@ export const WishlistView: React.FC<WishlistViewProps> = ({ user }) => {
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-coffee-500 mb-3 sm:mb-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-coffee-400" />
-                      <span className="line-clamp-1">{coffeeShop.address}</span>
+                      <span className="min-w-0 break-words line-clamp-2">{coffeeShop.address}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-coffee-400" />
-                      <span>{coffeeShop.hours || 'Hours not available'}</span>
+                      <span className="min-w-0 break-words">{coffeeShop.hours || 'Hours not available'}</span>
                     </div>
                   </div>
 
